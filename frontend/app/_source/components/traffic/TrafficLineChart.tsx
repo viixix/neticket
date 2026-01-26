@@ -8,11 +8,11 @@ import {
   Legend,
   ResponsiveContainer,
 } from 'recharts';
-import { SiteTraffic, TrafficChartData } from '@/types/traffic';
+import { SiteCongestion, CongestionChartData } from '@/types/traffic';
 
 interface Props {
-  sites: SiteTraffic[];
-  chartData: TrafficChartData[];
+  sites: SiteCongestion[];
+  chartData: CongestionChartData[];
 }
 
 export function TrafficLineChart({ sites, chartData }: Props) {
@@ -24,10 +24,17 @@ export function TrafficLineChart({ sites, chartData }: Props) {
           <XAxis dataKey="timestamp" tick={{ fontSize: 12 }} interval={3} />
           <YAxis
             tick={{ fontSize: 12 }}
-            tickFormatter={(value) => `${(value / 1000).toFixed(0)}k`}
+            domain={[0, 100]}
+            tickFormatter={(value) => `${value}`}
+            label={{
+              value: '경쟁 강도',
+              angle: -90,
+              position: 'insideLeft',
+              style: { fontSize: 12 },
+            }}
           />
           <Tooltip
-            formatter={(value: number) => [`${value.toLocaleString()}명`, '']}
+            formatter={(value: number) => [`${value.toFixed(0)}점`, '']}
             contentStyle={{
               backgroundColor: 'white',
               border: '1px solid #e5e7eb',

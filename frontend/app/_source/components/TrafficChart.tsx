@@ -1,6 +1,6 @@
 'use client';
 
-import { TrendingUp } from 'lucide-react';
+import { Activity } from 'lucide-react';
 import { useTraffic } from '../hooks/useTraffic';
 import { TrafficLineChart } from './traffic/TrafficLineChart';
 import { TrafficSummaryCards } from './traffic/TrafficSummaryCards';
@@ -9,22 +9,22 @@ import {
   TrafficError,
   TrafficEmpty,
 } from './traffic/TrafficStates';
-import { TrafficChartData } from '@/types/traffic';
+import { CongestionChartData } from '@/types/traffic';
 
 export function TrafficChart() {
   const { sites, isLoading, isError, error } = useTraffic(true);
 
   // 차트 데이터 변환: API 응답 → Recharts 형식
-  const chartData: TrafficChartData[] =
+  const chartData: CongestionChartData[] =
     sites.length > 0 && sites[0].data.length > 0
       ? sites[0].data.map((_, index) => {
-          const dataPoint: TrafficChartData = {
+          const dataPoint: CongestionChartData = {
             timestamp: sites[0].data[index].timestamp,
           };
 
           sites.forEach((site) => {
             dataPoint[site.displayName] =
-              site.data[index]?.concurrentUsers ?? 0;
+              site.data[index]?.congestionScore ?? 0;
           });
 
           return dataPoint;
@@ -33,19 +33,23 @@ export function TrafficChart() {
 
   if (isLoading) return <TrafficLoading />;
   if (isError)
-    return <TrafficError message={error instanceof Error ? error.message : undefined} />;
+    return (
+      <TrafficError
+        message={error instanceof Error ? error.message : undefined}
+      />
+    );
   if (sites.length === 0) return <TrafficEmpty />;
 
   return (
     <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-6">
       <div className="flex items-center gap-3 mb-6">
         <div className="w-10 h-10 bg-gradient-to-br from-orange-500 to-red-500 rounded-xl flex items-center justify-center">
-          <TrendingUp className="w-5 h-5 text-white" />
+          <Activity className="w-5 h-5 text-white" />
         </div>
         <div>
-          <h3 className="text-lg">실시간 트래픽 분석</h3>
+          <h3 className="text-lg font-semibold">예매 경쟁 강도 분석</h3>
           <p className="text-sm text-gray-500">
-            티켓팅 사이트별 트래픽 현황 (최근 24시간)
+            사이트별 응답 지연·에러율 기반 경쟁 강도 추정 (최근 24시간)
           </p>
         </div>
       </div>
