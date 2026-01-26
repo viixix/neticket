@@ -12,7 +12,10 @@ import {
 import { CongestionChartData } from '@/types/traffic';
 
 export function TrafficChart() {
-  const { sites, isLoading, isError, error } = useTraffic(false); // 실제 API 사용
+  // 환경 변수로 Mock 데이터 사용 여부 결정 (기본값: true)
+  const useMockData =
+    process.env.NEXT_PUBLIC_USE_MOCK_TRAFFIC !== 'false';
+  const { sites, isLoading, isError, error } = useTraffic(useMockData);
 
   // 차트 데이터 변환: API 응답 → Recharts 형식
   const chartData: CongestionChartData[] =
