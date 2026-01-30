@@ -14,6 +14,7 @@ jobs:
       has_changes: ${{ steps.detect.outputs.has_changes }}
       backend_matrix: ${{ steps.filter.outputs.matrix }}
       frontend_changed: ${{ steps.detect.outputs.frontend_changed }}
+      changed_services: ${{ steps.detect.outputs.changed_services }}
     steps:
       - name: ⬇️ Checkout Repository
         uses: actions/checkout@v4
