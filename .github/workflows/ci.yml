@@ -15,18 +15,35 @@ jobs:
       backend_matrix: ${{ steps.filter.outputs.matrix }}
       frontend_changed: ${{ steps.detect.outputs.frontend_changed }}
     steps:
-      - uses: actions/checkout@v4
-        with: { fetch-depth: 0 }
-      - id: detect
+      - name: ⬇️ Checkout Repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: 🕵️ Run Change Detection Script
+        id: detect
         run: |
           chmod +x .github/scripts/detect-changes.sh
           BASE="${{ github.base_ref || github.ref_name }}"
           .github/scripts/detect-changes.sh "origin/$BASE"
-      - id: filter
+
+      - name: 🧪 Filter Backend Matrix
+        id: filter
         run: |
+          # 감지된 전체 서비스 목록 가져오기
           SERVICES='${{ steps.detect.outputs.changed_services }}'
+
+          # 백엔드만 솎아내기 (sed)
           BACKEND=$(echo $SERVICES | sed 's/"frontend",//g; s/,"frontend"//g; s/\["frontend"\]/[]/g')
+
           echo "matrix=$BACKEND" >> $GITHUB_OUTPUT
+
+      - name: 📢 Detection Result Summary
+        run: |
+          echo "### 🔍 Detection Result" >> $GITHUB_STEP_SUMMARY
+          echo "- **Has Changes:** ${{ steps.detect.outputs.has_changes }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Frontend Changed:** ${{ steps.detect.outputs.frontend_changed }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Backend Matrix:** \`${{ steps.filter.outputs.matrix }}\`" >> $GITHUB_STEP_SUMMARY
 
   # Frontend CI
   ci-frontend:
