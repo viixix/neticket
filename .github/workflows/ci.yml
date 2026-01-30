@@ -68,7 +68,7 @@ jobs:
           cache-to: type=gha,mode=max
 
   ci-backend:
-    name: ⚙️ CI - ${{ matrix.service }}
+    name: ⚙️ CI - Backend
     needs: detect-changes
     if: needs.detect-changes.outputs.has_changes == 'true' && needs.detect-changes.outputs.backend_matrix != '[]'
     runs-on: ubuntu-latest
