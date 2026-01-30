@@ -2,289 +2,122 @@ name: CI - Pull Request
 
 on:
   pull_request:
-    branches:
-      - main
-      - dev
+    branches: [main, dev]
   push:
-    branches:
-      - main
-      - dev
+    branches: [main, dev]
 
 jobs:
   detect-changes:
-    name: Detect Changed Services
+    name: 🔍 Detect Changed Services
     runs-on: ubuntu-latest
     outputs:
       has_changes: ${{ steps.detect.outputs.has_changes }}
-      changed_services: ${{ steps.detect.outputs.changed_services }}
+      backend_matrix: ${{ steps.filter.outputs.matrix }}
       frontend_changed: ${{ steps.detect.outputs.frontend_changed }}
-      api_server_changed: ${{ steps.detect.outputs.api_server_changed }}
-      ticket_server_changed: ${{ steps.detect.outputs.ticket_server_changed }}
-      queue_backend_changed: ${{ steps.detect.outputs.queue_backend_changed }}
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-
-      - name: Detect changes
-        id: detect
+      - uses: actions/checkout@v4
+        with: { fetch-depth: 0 }
+      - id: detect
         run: |
           chmod +x .github/scripts/detect-changes.sh
-          # PR의 base 브랜치와 비교 (feature->dev는 dev와, dev->main은 main과 비교)
-          BASE_BRANCH="origin/${{ github.base_ref }}"
-          echo "Comparing with base branch: $BASE_BRANCH"
-          .github/scripts/detect-changes.sh "$BASE_BRANCH"
+          BASE="${{ github.base_ref || github.ref_name }}"
+          .github/scripts/detect-changes.sh "origin/$BASE"
+      - id: filter
+        run: |
+          SERVICES='${{ steps.detect.outputs.changed_services }}'
+          BACKEND=$(echo $SERVICES | sed 's/"frontend",//g; s/,"frontend"//g; s/\["frontend"\]/[]/g')
+          echo "matrix=$BACKEND" >> $GITHUB_OUTPUT
 
   # Frontend CI
   ci-frontend:
-    name: CI - Frontend
+    name: 🎨 CI - Frontend
     needs: detect-changes
     if: needs.detect-changes.outputs.frontend_changed == 'true'
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout
+      - name: ⬇️ Checkout code
         uses: actions/checkout@v4
 
-      - name: Setup pnpm
+      - name: 📦 Setup pnpm
         uses: pnpm/action-setup@v4
-        with:
-          version: latest
+        with: { version: 10.28.1 }
 
-      - name: Setup Node.js
+      - name: 🟢 Setup Node.js
         uses: actions/setup-node@v4
-        with:
-          node-version: '22'
-          cache: 'pnpm'
+        with: { node-version: "22", cache: "pnpm" }
 
-      - name: Install dependencies
+      - name: 📥 Install dependencies
         run: pnpm install --frozen-lockfile
 
-      - name: Lint
+      - name: 🧹 Run Lint
         run: pnpm --filter frontend lint
 
-      - name: Build
+      - name: 🏗️ Build Application (Next.js)
         run: pnpm --filter frontend build
+        # Next.js 빌드 시 필요한 환경변수가 있다면 여기에 추가 가능합니다.
+        # env:
+        #   NEXT_PUBLIC_API_URL: ${{ secrets.API_URL }}
 
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
-
-      # dev -> main PR인 경우에만 NCP Registry에 로그인
-      - name: Login to NCP Container Registry
-        if: github.base_ref == 'main' && github.event_name == 'pull_request'
-        uses: docker/login-action@v3
-        with:
-          registry: ${{ secrets.NCP_REGISTRY_URL }}
-          username: ${{ secrets.NCP_REGISTRY_USERNAME }}
-          password: ${{ secrets.NCP_REGISTRY_PASSWORD }}
-
-      # dev -> main PR인 경우: 이미지 빌드 및 푸시
-      - name: Build and push Docker image (dev -> main)
-        if: github.base_ref == 'main' && github.event_name == 'pull_request'
+      - name: 🐳 Docker Build Check
         uses: docker/build-push-action@v5
         with:
           context: .
           file: frontend/Dockerfile
-          push: true
-          tags: |
-            ${{ secrets.NCP_REGISTRY_URL }}/beastcamp-frontend:${{ github.sha }}
-            ${{ secrets.NCP_REGISTRY_URL }}/beastcamp-frontend:latest
-          build-args: |
-            NEXT_PUBLIC_API_URL=http://localhost/api
-            NEXT_PUBLIC_API_MODE=mock
-          cache-from: type=registry,ref=${{ secrets.NCP_REGISTRY_URL }}/beastcamp-frontend:buildcache
-          cache-to: type=registry,ref=${{ secrets.NCP_REGISTRY_URL }}/beastcamp-frontend:buildcache,mode=max
-
-      # feature -> dev PR인 경우: 이미지 빌드만 (푸시 안 함)
-      - name: Build Docker image (feature -> dev)
-        if: github.base_ref != 'main' || github.event_name != 'pull_request'
-        uses: docker/build-push-action@v5
-        with:
-          context: .
-          file: frontend/Dockerfile
-          push: false
-          tags: beastcamp-frontend:ci-${{ github.sha }}
-          build-args: |
-            NEXT_PUBLIC_API_URL=http://localhost/api
-            NEXT_PUBLIC_API_MODE=mock
+          push: false # CI는 검사만 하므로 푸시는 하지 않음!
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
-  # API Server CI
-  ci-api-server:
-    name: CI - API Server
+  ci-backend:
+    name: ⚙️ CI - ${{ matrix.service }}
     needs: detect-changes
-    if: needs.detect-changes.outputs.api_server_changed == 'true'
+    if: needs.detect-changes.outputs.has_changes == 'true' && needs.detect-changes.outputs.backend_matrix != '[]'
     runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        service: ${{ fromJson(needs.detect-changes.outputs.backend_matrix) }}
     steps:
-      - name: Checkout
+      - name: ⬇️ Checkout code
         uses: actions/checkout@v4
 
-      - name: Setup pnpm
+      - name: 📦 Setup pnpm
         uses: pnpm/action-setup@v4
-        with:
-          version: latest
+        with: { version: 10.28.1 }
 
-      - name: Setup Node.js
+      - name: 🟢 Setup Node.js
         uses: actions/setup-node@v4
-        with:
-          node-version: '22'
-          cache: 'pnpm'
+        with: { node-version: "22", cache: "pnpm" }
 
-      - name: Install dependencies
+      - name: 📥 Install dependencies
         run: pnpm install --frozen-lockfile
 
-      - name: Lint
-        run: pnpm --filter @beastcamp/api-server lint
+      - name: 🧹 Run Lint
+        run: pnpm --filter @beastcamp/${{ matrix.service }} lint
 
-      - name: Test
-        run: pnpm --filter @beastcamp/api-server test
+      - name: 🧪 Run Unit Tests
+        run: pnpm --filter @beastcamp/${{ matrix.service }} test
 
-      - name: Build
-        run: pnpm --filter @beastcamp/api-server build
-
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
-
-      - name: Build Docker image
+      - name: 🐳 Docker Build Check
         uses: docker/build-push-action@v5
         with:
           context: .
-          file: backend/api-server/Dockerfile
+          file: ${{ matrix.service == 'queue-backend' && 'queue-backend/Dockerfile' || format('backend/{0}/Dockerfile', matrix.service) }}
           push: false
-          tags: beastcamp-api-server:ci-${{ github.sha }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
-  # Ticket Server CI
-  ci-ticket-server:
-    name: CI - Ticket Server
-    needs: detect-changes
-    if: needs.detect-changes.outputs.ticket_server_changed == 'true'
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Setup pnpm
-        uses: pnpm/action-setup@v4
-        with:
-          version: latest
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: '22'
-          cache: 'pnpm'
-
-      - name: Install dependencies
-        run: pnpm install --frozen-lockfile
-
-      - name: Lint
-        run: pnpm --filter @beastcamp/ticket-server lint
-
-      - name: Test
-        run: pnpm --filter @beastcamp/ticket-server test
-
-      - name: Build
-        run: pnpm --filter @beastcamp/ticket-server build
-
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
-
-      - name: Build Docker image
-        uses: docker/build-push-action@v5
-        with:
-          context: .
-          file: backend/ticket-server/Dockerfile
-          push: false
-          tags: beastcamp-ticket-server:ci-${{ github.sha }}
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
-
-  # Queue Backend CI
-  ci-queue-backend:
-    name: CI - Queue Backend
-    needs: detect-changes
-    if: needs.detect-changes.outputs.queue_backend_changed == 'true'
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Setup pnpm
-        uses: pnpm/action-setup@v4
-        with:
-          version: latest
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: '22'
-          cache: 'pnpm'
-
-      - name: Install dependencies
-        run: pnpm install --frozen-lockfile
-
-      - name: Lint
-        run: pnpm --filter @beastcamp/queue-backend lint
-
-      - name: Test
-        run: pnpm --filter @beastcamp/queue-backend test
-
-      - name: Build
-        run: pnpm --filter @beastcamp/queue-backend build
-
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
-
-      - name: Build Docker image
-        uses: docker/build-push-action@v5
-        with:
-          context: .
-          file: queue-backend/Dockerfile
-          push: false
-          tags: beastcamp-queue-backend:ci-${{ github.sha }}
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
-
-  # CI Summary
   ci-summary:
-    name: CI Summary
-    needs:
-      [
-        detect-changes,
-        ci-frontend,
-        ci-api-server,
-        ci-ticket-server,
-        ci-queue-backend,
-      ]
+    name: 📊 CI Result Summary
+    needs: [detect-changes, ci-frontend, ci-backend]
     if: always()
     runs-on: ubuntu-latest
     steps:
-      - name: Check CI Results
+      - name: 🏁 Final Status Check
         run: |
-          echo "=== CI Summary ==="
-          echo "Changed services: ${{ needs.detect-changes.outputs.changed_services }}"
-
-          if [ "${{ needs.detect-changes.outputs.has_changes }}" == "false" ]; then
-            echo "No services changed - skipping CI"
-            exit 0
-          fi
-
-          echo ""
-          echo "CI Results:"
-          echo "- Frontend: ${{ needs.ci-frontend.result }}"
-          echo "- API Server: ${{ needs.ci-api-server.result }}"
-          echo "- Ticket Server: ${{ needs.ci-ticket-server.result }}"
-          echo "- Queue Backend: ${{ needs.ci-queue-backend.result }}"
-
-          # Check if any CI job failed
-          if [ "${{ contains(needs.*.result, 'failure') }}" == "true" ]; then
-            echo ""
-            echo "❌ Some CI jobs failed"
+          F_ST="${{ needs.ci-frontend.result }}"
+          B_ST="${{ needs.ci-backend.result }}"
+          if [[ "$F_ST" == "failure" || "$B_ST" == "failure" ]]; then
+            echo "❌ CI Failed: Please check your code"
             exit 1
           fi
-
-          echo ""
-          echo "✅ All CI jobs passed"
+          echo "✅ CI Passed: Deployment ready"
