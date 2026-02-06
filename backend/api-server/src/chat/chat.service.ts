@@ -23,7 +23,7 @@ export class ChatService {
 
   async getAllMessages(): Promise<ChatMessageResponse[]> {
     const messages = await this.chatMessageRepository.find({
-      order: { timestamp: 'ASC' },
+      order: { timestamp: 'DESC' },
       take: 100, // 최근 100개만 조회
     });
 
