@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useMemo } from "react";
 import Image from "next/image";
 import { Heart, ChevronRight } from "lucide-react";
 import { Performance, Session } from "@/types/performance";
@@ -30,9 +30,16 @@ export default function Yes24PerformanceDetail({
   const [likeCount, setLikeCount] = useState(436);
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(undefined);
   const [selectedSession, setSelectedSession] = useState<string | null>(null);
-  const [isTicketingOpen, setIsTicketingOpen] = useState(false);
 
   useResetAuthToken();
+
+  // 티켓팅 오픈 여부 계산 (페이지 로드 시 한 번만 계산, 이후 새로고침 필요)
+  const isTicketingOpen = useMemo(() => {
+    if (!performance.ticketing_date) return false;
+    const now = new Date().getTime();
+    const ticketingTime = new Date(performance.ticketing_date).getTime();
+    return now >= ticketingTime;
+  }, [performance.ticketing_date]);
 
   // 날짜 선택 핸들러 - 날짜 변경 시 선택된 회차 초기화
   const handleDateSelect = (date: Date | undefined) => {
@@ -60,22 +67,6 @@ export default function Yes24PerformanceDetail({
       dateRange = `${formatDate(minDate)} ~ ${formatDate(maxDate)}`;
     }
   }
-
-  // 티켓팅 오픈 여부 체크
-  useEffect(() => {
-    if (!performance.ticketing_date) return;
-
-    const checkTicketingStatus = () => {
-      const now = new Date().getTime();
-      const ticketingTime = new Date(performance.ticketing_date).getTime();
-      setIsTicketingOpen(now >= ticketingTime);
-    };
-
-    checkTicketingStatus();
-    const timer = setInterval(checkTicketingStatus, 1000);
-
-    return () => clearInterval(timer);
-  }, [performance.ticketing_date]);
 
   const handleLike = () => {
     setLiked(!liked);
