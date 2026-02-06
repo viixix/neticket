@@ -62,22 +62,6 @@ export default function Chat() {
     }
   }, [messages]);
 
-  const formatTime = (timestamp: string) => {
-    // ISO 8601 UTC 문자열을 로컬 시간으로 변환
-    const date = new Date(timestamp);
-
-    // 유효한 날짜인지 확인
-    if (isNaN(date.getTime())) {
-      return '시간 정보 없음';
-    }
-
-    return date.toLocaleTimeString('ko-KR', {
-      hour: '2-digit',
-      minute: '2-digit',
-      hour12: false, // 24시간 형식 사용
-    });
-  };
-
   return (
     <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 mt-8">
       <div className="bg-white rounded-xl shadow-lg border border-gray-200 overflow-hidden flex flex-col h-[600px]">
@@ -126,9 +110,6 @@ export default function Chat() {
                   <div className="flex items-baseline gap-2 mb-1">
                     <span className="text-sm font-semibold text-purple-600">
                       {msg.nickname}
-                    </span>
-                    <span className="text-xs text-gray-400">
-                      {formatTime(msg.timestamp)}
                     </span>
                   </div>
                   <p className="text-sm break-words text-gray-800">
