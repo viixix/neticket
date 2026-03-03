@@ -57,14 +57,14 @@ services:
         max-file: '3'
 
   cadvisor:
-    image: gcr.io/cadvisor/cadvisor:v0.47.2
+    image: gcr.io/cadvisor/cadvisor:v0.51.0
     container_name: cadvisor-queue
     restart: unless-stopped
     ports:
       - '8080:8080'
     volumes:
       - /:/rootfs:ro
-      - /run/docker.sock:/var/run/docker.sock:rw
+      - /var/run:/var/run:ro
       - /sys:/sys:ro
       - /var/lib/docker/:/var/lib/docker:ro
       - /dev/disk/:/dev/disk:ro
