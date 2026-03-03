@@ -57,7 +57,7 @@ services:
         max-file: '3'
 
   cadvisor:
-    image: gcr.io/cadvisor/cadvisor:v0.51.0
+    image: gcr.io/cadvisor/cadvisor:v0.56.2
     container_name: cadvisor-queue
     restart: unless-stopped
     ports:
