@@ -13,6 +13,10 @@ services:
       interval: 5s
       timeout: 3s
       retries: 5
+    ulimits:
+      nofile:
+        soft: 65535
+        hard: 65535
     # volumes:
     #   - ./queue-backend/redis_data:/data
   queue-backend:
@@ -35,6 +39,10 @@ services:
       options:
         max-size: '10m'
         max-file: '3'
+    ulimits:
+      nofile:
+        soft: 65535
+        hard: 65535
 
   promtail:
     image: grafana/promtail:3.3.0
