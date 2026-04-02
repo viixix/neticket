@@ -4,15 +4,13 @@ import { randomBytes } from 'crypto';
 import Redis from 'ioredis';
 import { QueueConfigService } from './queue-config.service';
 import { TicketingStateService } from './ticketing-state.service';
-import {
-  QUEUE_ERROR_CODES,
-  QueueException,
-  TraceService,
-} from '@beastcamp/shared-nestjs';
+import { QUEUE_ERROR_CODES, TraceService } from '@beastcamp/shared-nestjs';
+import { createQueueErrorHandler } from './utils/queue-error.util';
 
 @Injectable()
 export class VirtualUserInjector {
   private readonly logger = new Logger(VirtualUserInjector.name);
+  private readonly handleError = createQueueErrorHandler(this.logger);
   private isRunning = false;
   private timerId: NodeJS.Timeout | null = null;
   private startAt = 0;
@@ -125,21 +123,7 @@ export class VirtualUserInjector {
         return this.stop();
       }
     } catch (error) {
-      const wrappedError =
-        error instanceof QueueException
-          ? error
-          : new QueueException(
-              QUEUE_ERROR_CODES.QUEUE_VIRTUAL_INJECT_FAILED,
-              '가상 유저 주입 중 오류가 발생했습니다.',
-              500,
-            );
-      this.logger.error(
-        wrappedError.message,
-        error instanceof Error ? error.stack : undefined,
-        {
-          errorCode: wrappedError.errorCode,
-        },
-      );
+      this.handleError(error, QUEUE_ERROR_CODES.QUEUE_VIRTUAL_INJECT_FAILED);
     }
 
     this.scheduleNextTick();
@@ -168,24 +152,14 @@ export class VirtualUserInjector {
 
       if (errorResult) {
         const [redisError] = errorResult;
-
-        const wrappedError = new QueueException(
+        throw this.handleError(
+          redisError,
           QUEUE_ERROR_CODES.QUEUE_VIRTUAL_INJECT_FAILED,
-          '대기열 주입에 실패했습니다.',
-          500,
-        );
-
-        this.logger.error(
-          wrappedError.message,
-          redisError instanceof Error ? redisError.stack : String(redisError),
           {
-            errorCode: wrappedError.errorCode,
             isVirtual: true,
             results,
           },
         );
-
-        throw wrappedError;
       }
 
       if (virtual.injectBatchDelayMs > 0 && offset + currentBatchSize < count) {

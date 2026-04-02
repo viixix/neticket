@@ -6,7 +6,8 @@ import {
   REDIS_KEY_PREFIXES,
 } from '@beastcamp/shared-constants';
 import { QueueConfigService } from './queue-config.service';
-import { QUEUE_ERROR_CODES, QueueException } from '@beastcamp/shared-nestjs';
+import { QUEUE_ERROR_CODES } from '@beastcamp/shared-nestjs';
+import { createQueueErrorHandler } from './utils/queue-error.util';
 
 interface RedisWithCommands extends Redis {
   syncAndPromoteWaiters(
@@ -26,6 +27,7 @@ interface RedisWithCommands extends Redis {
 @Injectable()
 export class QueueWorker {
   private readonly logger = new Logger(QueueWorker.name);
+  private readonly handleError = createQueueErrorHandler(this.logger);
   private isProcessing = false;
 
   constructor(
@@ -64,21 +66,7 @@ export class QueueWorker {
         });
       }
     } catch (error) {
-      const wrappedError =
-        error instanceof QueueException
-          ? error
-          : new QueueException(
-              QUEUE_ERROR_CODES.QUEUE_TRANSFER_FAILED,
-              '대기열 처리 중 오류가 발생했습니다.',
-              500,
-            );
-      this.logger.error(
-        wrappedError.message,
-        error instanceof Error ? error.stack : undefined,
-        {
-          errorCode: wrappedError.errorCode,
-        },
-      );
+      this.handleError(error, QUEUE_ERROR_CODES.QUEUE_TRANSFER_FAILED);
     } finally {
       this.isProcessing = false;
     }
@@ -109,22 +97,9 @@ export class QueueWorker {
         }
       }
     } catch (error) {
-      const wrappedError =
-        error instanceof QueueException
-          ? error
-          : new QueueException(
-              QUEUE_ERROR_CODES.QUEUE_REMOVE_ACTIVE_FAILED,
-              '활성 큐 제거에 실패했습니다.',
-              500,
-            );
-      this.logger.error(
-        wrappedError.message,
-        error instanceof Error ? error.stack : undefined,
-        {
-          errorCode: wrappedError.errorCode,
-          userId,
-        },
-      );
+      this.handleError(error, QUEUE_ERROR_CODES.QUEUE_REMOVE_ACTIVE_FAILED, {
+        userId,
+      });
     }
   }
 }
