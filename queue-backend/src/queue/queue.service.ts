@@ -16,10 +16,12 @@ import { VirtualUserInjector } from './virtual-user.injector';
 import { QueueConfigService } from './queue-config.service';
 import { TicketingStateService } from './ticketing-state.service';
 import { QUEUE_ERROR_CODES, QueueException } from '@beastcamp/shared-nestjs';
+import { createQueueErrorHandler } from './utils/queue-error.util';
 
 @Injectable()
 export class QueueService {
   private readonly logger = new Logger(QueueService.name);
+  private readonly handleError = createQueueErrorHandler(this.logger);
   private hasTriggeredInjection = false;
 
   constructor(
@@ -133,21 +135,10 @@ export class QueueService {
           await this.virtualUserInjector.start();
         } catch (error) {
           await this.redis.del(lockKey);
-          const wrappedError =
-            error instanceof QueueException
-              ? error
-              : new QueueException(
-                  QUEUE_ERROR_CODES.QUEUE_INJECTION_START_FAILED,
-                  '가상 유저 주입 시작에 실패했습니다.',
-                  500,
-                );
-          this.logger.error(
-            wrappedError.message,
-            error instanceof Error ? error.stack : undefined,
-            {
-              errorCode: wrappedError.errorCode,
-              lockKey,
-            },
+          this.handleError(
+            error,
+            QUEUE_ERROR_CODES.QUEUE_INJECTION_START_FAILED,
+            { lockKey },
           );
           return;
         }

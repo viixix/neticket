@@ -11,14 +11,15 @@ import { QueueWorker } from './queue.worker';
 import { QueueConfigService } from './queue-config.service';
 import {
   QUEUE_ERROR_CODES,
-  QueueException,
   runWithPubSubContext,
   TraceService,
 } from '@beastcamp/shared-nestjs';
+import { createQueueErrorHandler } from './utils/queue-error.util';
 
 @Injectable()
 export class QueueTrigger implements OnModuleInit, OnModuleDestroy {
   private readonly logger = new Logger(QueueTrigger.name);
+  private readonly handleError = createQueueErrorHandler(this.logger);
   private subClient: Redis;
   private timer: NodeJS.Timeout | null = null;
   private isRunning = false;
@@ -74,21 +75,7 @@ export class QueueTrigger implements OnModuleInit, OnModuleDestroy {
       await this.configService.sync();
       await this.worker.processQueueTransfer();
     } catch (error) {
-      const wrappedError =
-        error instanceof QueueException
-          ? error
-          : new QueueException(
-              QUEUE_ERROR_CODES.QUEUE_TRIGGER_FAILED,
-              '대기열 스케줄링 중 오류가 발생했습니다.',
-              500,
-            );
-      this.logger.error(
-        wrappedError.message,
-        error instanceof Error ? error.stack : undefined,
-        {
-          errorCode: wrappedError.errorCode,
-        },
-      );
+      this.handleError(error, QUEUE_ERROR_CODES.QUEUE_TRIGGER_FAILED);
     } finally {
       this.scheduleNextTransfer();
     }
@@ -107,22 +94,9 @@ export class QueueTrigger implements OnModuleInit, OnModuleDestroy {
       await this.worker.removeActiveUser(userId, isVirtual);
       await this.worker.processQueueTransfer();
     } catch (err) {
-      const wrappedError =
-        err instanceof QueueException
-          ? err
-          : new QueueException(
-              QUEUE_ERROR_CODES.QUEUE_DONE_EVENT_FAILED,
-              '티켓팅 완료 이벤트 처리 중 오류가 발생했습니다.',
-              500,
-            );
-      this.logger.error(
-        wrappedError.message,
-        err instanceof Error ? err.stack : undefined,
-        {
-          errorCode: wrappedError.errorCode,
-          userId,
-        },
-      );
+      this.handleError(err, QUEUE_ERROR_CODES.QUEUE_DONE_EVENT_FAILED, {
+        userId,
+      });
     }
   }
 
