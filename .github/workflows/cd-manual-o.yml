@@ -78,10 +78,11 @@ jobs:
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
-  # 3단계: 각 서버로 배포 (인증 정보 동적 매핑)
-  deploy:
-    name: Deploy - ${{ matrix.service }}
+  # 3a: 백엔드 호스트(api + ticket) — 동일 호스트·동일 compose이므로 직렬
+  deploy-backend:
+    name: Deploy (backend) - ${{ matrix.service }}
     needs: [resolve-targets, build-and-push]
+    if: needs.resolve-targets.outputs.has_targets == 'true' && (contains(needs.resolve-targets.outputs.matrix, 'api-server') || contains(needs.resolve-targets.outputs.matrix, 'ticket-server'))
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
@@ -96,16 +97,11 @@ jobs:
             host_secret: BACKEND_SERVER_HOST
             user_secret: BACKEND_SERVER_USER
             pass_secret: BACKEND_SERVER_PASSWORD
-          - service: queue-backend
-            host_secret: QUEUE_SERVER_HOST
-            user_secret: QUEUE_SERVER_USER
-            pass_secret: QUEUE_SERVER_PASSWORD
     steps:
       - name: 배포 실행
         if: contains(fromJson(needs.resolve-targets.outputs.matrix), matrix.service)
         uses: appleboy/ssh-action@v1.0.3
         with:
-          # Matrix에 정의된 키 이름을 사용하여 서버별로 다른 비밀번호/호스트 주입
           host: ${{ secrets[matrix.host_secret] }}
           username: ${{ secrets[matrix.user_secret] }}
           password: ${{ secrets[matrix.pass_secret] }}
@@ -135,7 +131,7 @@ jobs:
             docker compose pull $SERVICE_NAME promtail cadvisor
             docker compose up -d --wait --no-build $SERVICE_NAME promtail cadvisor
 
-            # 5. 디스크 청소 (24시간 이내 이미지는 보존하여 롤백 대비)
+            # 6. 디스크 청소 (24시간 이내 이미지는 보존하여 롤백 대비)
             docker image prune -af --filter "until=24h"
             echo "✅ $SERVICE_NAME 배포 완료"
         env:
@@ -147,11 +143,62 @@ jobs:
           NCP_REGISTRY_PASSWORD: ${{ secrets.NCP_REGISTRY_PASSWORD }}
           LOKI_URL: ${{ secrets.LOKI_URL }}
 
+  # 3b: 큐 호스트 — 백엔드 deploy-backend와 서로 needs 없음 → all 선택 시 병렬 실행
+  deploy-queue:
+    name: Deploy (queue) - queue-backend
+    needs: [resolve-targets, build-and-push]
+    if: needs.resolve-targets.outputs.has_targets == 'true' && contains(needs.resolve-targets.outputs.matrix, 'queue-backend')
+    runs-on: ubuntu-latest
+    steps:
+      - name: 배포 실행
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.QUEUE_SERVER_HOST }}
+          username: ${{ secrets.QUEUE_SERVER_USER }}
+          password: ${{ secrets.QUEUE_SERVER_PASSWORD }}
+          envs: NCP_REGISTRY_URL,NCP_REGISTRY_USERNAME,NCP_REGISTRY_PASSWORD,IMAGE_TAG,SERVICE_NAME,TARGET_BRANCH,LOKI_URL
+          script: |
+            cd /app/web10-beastcamp
+
+            # 1. 최신 코드 동기화
+            git fetch origin $TARGET_BRANCH
+            git reset --hard origin/$TARGET_BRANCH
+
+            # 2. 서비스 위치로 이동
+            [ "$SERVICE_NAME" == "queue-backend" ] && cd queue-backend || cd backend
+
+            # 3. 환경 변수 설정 (LOKI_URL 주입)
+            if [ ! -f .env ]; then touch .env; fi
+            sed -i '/^LOKI_URL=/d' .env
+            echo "LOKI_URL=$LOKI_URL" >> .env
+
+            # 4. NCP 레지스트리 로그인
+            echo "$NCP_REGISTRY_PASSWORD" | docker login "$NCP_REGISTRY_URL" -u "$NCP_REGISTRY_USERNAME" --password-stdin
+
+            # 5. 배포 (Clean Export 문법 반영 및 --wait 적용)
+            export IMAGE_TAG NCP_REGISTRY_URL SERVICE_NAME LOKI_URL
+
+            echo "🚀 $SERVICE_NAME 배포 중 (Healthcheck 대기)..."
+            docker compose pull $SERVICE_NAME promtail cadvisor
+            docker compose up -d --wait --no-build $SERVICE_NAME promtail cadvisor
+
+            # 6. 디스크 청소 (24시간 이내 이미지는 보존하여 롤백 대비)
+            docker image prune -af --filter "until=24h"
+            echo "✅ $SERVICE_NAME 배포 완료"
+        env:
+          IMAGE_TAG: ${{ github.sha }}
+          SERVICE_NAME: queue-backend
+          TARGET_BRANCH: ${{ github.event.inputs.branch }}
+          NCP_REGISTRY_URL: ${{ secrets.NCP_REGISTRY_URL }}
+          NCP_REGISTRY_USERNAME: ${{ secrets.NCP_REGISTRY_USERNAME }}
+          NCP_REGISTRY_PASSWORD: ${{ secrets.NCP_REGISTRY_PASSWORD }}
+          LOKI_URL: ${{ secrets.LOKI_URL }}
+
   # 4단계: 결과 요약
   deployment-summary:
     name: Deployment Summary
-    needs: [resolve-targets, deploy]
-    if: always()
+    needs: [resolve-targets, deploy-backend, deploy-queue]
+    if: always() && needs.resolve-targets.result == 'success'
     runs-on: ubuntu-latest
     steps:
       - name: 결과 출력
