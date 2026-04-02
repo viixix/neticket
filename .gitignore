@@ -22,3 +22,5 @@ PR.md
 ticketing-simulator-key.pem
 이슈.md
 backend/.env
+
+[a-zA-Z0-9_-]*.md
