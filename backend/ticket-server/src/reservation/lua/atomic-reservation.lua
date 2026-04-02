@@ -1,3 +1,4 @@
+---@diagnostic disable: deprecated
 -- KEYS: 예약하려는 좌석 키 목록
 -- ARGV[1]: 유저 ID (좌석의 value로 사용)
 -- ARGV[2]: 순위 키 (rank key)
