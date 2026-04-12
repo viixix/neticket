@@ -19,29 +19,46 @@ export const getWinstonLogger = (
     return info;
   });
 
+  const isProd = process.env.NODE_ENV === "production";
+
+  const prodFormat = winston.format.combine(
+    traceFormat(),
+    winston.format.timestamp(),
+    winston.format.ms(),
+    winston.format.label({ label: serviceName }),
+    winston.format((info) => {
+      if (typeof info.context === "string") {
+        info.className = info.context;
+        delete info.context;
+      }
+      if (typeof info.context === "object" && info.context !== null) {
+        Object.assign(info, info.context);
+        delete info.context;
+      }
+      return info;
+    })(),
+    winston.format.json()
+  );
+
+  const devFormat = winston.format.combine(
+    winston.format.timestamp({ format: "HH:mm:ss" }),
+    winston.format.ms(),
+    winston.format.colorize({ all: true }),
+    winston.format.printf(({ timestamp, level, message, ms, context, stack, ...rest }) => {
+      const ctx = typeof context === "string" ? ` [${context}]` : "";
+      const extra = Object.keys(rest).length > 0
+        ? "\n  " + JSON.stringify(rest, null, 2).replace(/\n/g, "\n  ")
+        : "";
+      const stackTrace = stack ? `\n${stack}` : "";
+      return `${timestamp} [${serviceName}] ${level}${ctx}: ${message} ${ms}${extra}${stackTrace}`;
+    })
+  );
+
   return WinstonModule.createLogger({
     transports: [
       new winston.transports.Console({
-        level: process.env.NODE_ENV === "production" ? "info" : "debug",
-        format: winston.format.combine(
-          traceFormat(),
-          winston.format.timestamp(),
-          winston.format.ms(),
-          winston.format.label({ label: serviceName }),
-          winston.format((info) => {
-            if (typeof info.context === "string") {
-              info.className = info.context;
-              delete info.context;
-            }
-
-            if (typeof info.context === "object" && info.context !== null) {
-              Object.assign(info, info.context);
-              delete info.context;
-            }
-            return info;
-          })(),
-          winston.format.json()
-        ),
+        level: isProd ? "info" : "debug",
+        format: isProd ? prodFormat : devFormat,
       }),
     ],
   });
