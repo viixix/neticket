@@ -5,6 +5,8 @@ import dynamic from "next/dynamic";
 import { ErrorBoundary } from "react-error-boundary";
 import { useTimeLogStore } from "@/hooks/timeLogStore";
 import { useRouter } from "next/navigation";
+import { useAuth } from "@/contexts/AuthContext";
+import { isExperienceMode } from "@/lib/utils";
 
 // 동적 import로 클라이언트 전용 로드 (SSR 비활성화)
 const CaptchaVerification = dynamic(
@@ -114,6 +116,9 @@ export function CaptchaModal({
   onVerified,
   onClose,
 }: CaptchaModalProps) {
+  const { token } = useAuth();
+  const hasToken = !!token || isExperienceMode();
+
   const startCaptcha = useTimeLogStore((state) => state.startCaptcha);
   const endCaptcha = useTimeLogStore((state) => state.endCaptcha);
   const startSeatSelection = useTimeLogStore(
@@ -140,11 +145,15 @@ export function CaptchaModal({
   return (
     <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
       <div className="relative z-10 w-full max-w-md">
-        <ErrorBoundary FallbackComponent={CaptchaErrorFallback}>
-          <Suspense fallback={<CaptchaLoadingFallback />}>
-            <CaptchaVerification onVerified={handleVerified} />
-          </Suspense>
-        </ErrorBoundary>
+        {hasToken ? (
+          <ErrorBoundary FallbackComponent={CaptchaErrorFallback}>
+            <Suspense fallback={<CaptchaLoadingFallback />}>
+              <CaptchaVerification onVerified={handleVerified} />
+            </Suspense>
+          </ErrorBoundary>
+        ) : (
+          <CaptchaLoadingFallback />
+        )}
       </div>
     </div>
   );
