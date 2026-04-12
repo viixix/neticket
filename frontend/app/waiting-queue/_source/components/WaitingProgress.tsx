@@ -19,7 +19,7 @@ export default function WaitingProgress() {
     token,
     status,
   } = useWaitingQueue();
-  const { setToken } = useAuth();
+  const { token: authToken, setToken } = useAuth();
 
   const startWaitingQueue = useTimeLogStore((state) => state.startWaitingQueue);
   const endWaitingQueue = useTimeLogStore((state) => state.endWaitingQueue);
@@ -31,16 +31,22 @@ export default function WaitingProgress() {
     resetAllTimers();
     startWaitingQueue();
   }, [resetAllTimers, startWaitingQueue]);
-  // isFinished 상태에 따른 대기열 타이머 종료 후 다음 페이지로 이동
 
+  // 대기열 완료 시 토큰 설정 (네비게이션과 분리)
   useEffect(() => {
     if (isFinished && token) {
       endWaitingQueue();
       setToken(token);
+    }
+  }, [isFinished, token, setToken, endWaitingQueue]);
+
+  // AuthContext에 토큰이 실제로 설정된 후에만 페이지 이동
+  useEffect(() => {
+    if (isFinished && authToken) {
       const searchParams = new URLSearchParams(window.location.search);
       router.replace(`/reservations?${searchParams.toString()}`);
     }
-  }, [isFinished, router, token, setToken, endWaitingQueue]);
+  }, [isFinished, authToken, router]);
 
   useEffect(() => {
     if (isLoading) return;
