@@ -1,0 +1,46 @@
+server:
+  http_listen_port: 9080
+  grpc_listen_port: 0
+
+positions:
+  filename: /tmp/positions.yaml
+
+clients:
+  - url: ${LOKI_URL}
+
+scrape_configs:
+  - job_name: docker
+    docker_sd_configs:
+      - host: unix:///var/run/docker.sock
+        refresh_interval: 5s
+    relabel_configs:
+      - source_labels: ['__meta_docker_container_name']
+        regex: '/(.*)'
+        target_label: 'container'
+      - target_label: 'host'
+        replacement: 'queue-instance'
+
+    pipeline_stages:
+      # NestJS(Winston) JSON 로그 파싱
+      - json:
+          expressions:
+            level: level
+            message: message
+            service: service
+            context: context
+            timestamp: timestamp
+
+      # Grafana 필터링 라벨 등록 (예: {level="error", service="queue", context="QueueWorker"})
+      - labels:
+          level:
+          service:
+          context:
+
+      # 로그 메시지 본문만 출력 (JSON 구조 제거)
+      #- output:
+      #    source: message
+
+      # 로그 발생 시각 동기화 (ISO 8601 / RFC3339)
+      - timestamp:
+          source: timestamp
+          format: RFC3339
