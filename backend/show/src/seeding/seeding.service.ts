@@ -36,7 +36,7 @@ export class SeedingService implements OnApplicationBootstrap {
     if (process.env.NODE_ENV === 'dev') {
       // 개발 환경: 현재 시간부터 1시간 뒤까지만 생성 (가벼운 부팅)
       const now = new Date();
-      const oneHourLater = new Date(now.getTime() + 60 * 60 * 1000);
+      const eightHoursLater = new Date(now.getTime() + 8 * 60 * 60 * 1000);
 
       void this.traceService.runWithTraceId(
         this.traceService.generateTraceId(),
@@ -44,12 +44,12 @@ export class SeedingService implements OnApplicationBootstrap {
           this.logger.log('DEV 환경 자동 시딩 프로세스 진입');
 
           try {
-            await this.seed(now, oneHourLater);
+            await this.seed(now, eightHoursLater);
           } catch (err) {
             this.logger.error(
               '자동 시딩 실패',
               err instanceof Error ? err.stack : undefined,
-              { startDate: now, endDate: oneHourLater },
+              { startDate: now, endDate: eightHoursLater },
             );
           }
         },
