@@ -54,16 +54,16 @@ check_package_dependencies() {
 echo "=== 서비스별 변경 감지 ==="
 # 서비스별 변경 감지
 check_service_change "frontend" "frontend" || true
-check_service_change "api-server" "backend/api-server" || true
-check_service_change "ticket-server" "backend/ticket-server" || true
-check_service_change "queue-backend" "queue-backend" || true
+check_service_change "show" "backend/show" || true
+check_service_change "booking" "backend/booking" || true
+check_service_change "queue" "queue" || true
 
 echo ""
 echo "=== 공통 패키지 의존성 체크 ==="
 # 공통 패키지 변경 시 의존 서비스 추가
-check_package_dependencies "shared-types" "api-server" "ticket-server" "queue-backend"
-check_package_dependencies "shared-nestjs" "api-server" "ticket-server" "queue-backend"
-check_package_dependencies "shared-constants" "queue-backend" "ticket-server"
+check_package_dependencies "shared-types" "show" "booking" "queue"
+check_package_dependencies "shared-nestjs" "show" "booking" "queue"
+check_package_dependencies "shared-constants" "queue" "booking"
 
 echo ""
 echo "=== 최종 결과 ==="
@@ -98,7 +98,7 @@ else
   echo "개별 서비스 플래그:"
 
   # 개별 서비스 플래그 설정
-  for service in "frontend" "api-server" "ticket-server" "queue-backend"; do
+  for service in "frontend" "show" "booking" "queue"; do
     if [[ " ${CHANGED_SERVICES[@]} " =~ " ${service} " ]]; then
       echo "   ${service//-/_}_changed=true"
     else

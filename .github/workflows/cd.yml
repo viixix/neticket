@@ -11,9 +11,9 @@ jobs:
       has_changes: ${{ steps.detect.outputs.has_changes }}
       changed_services: ${{ steps.detect.outputs.changed_services }}
       frontend_changed: ${{ steps.detect.outputs.frontend_changed }}
-      api_server_changed: ${{ steps.detect.outputs.api_server_changed }}
-      ticket_server_changed: ${{ steps.detect.outputs.ticket_server_changed }}
-      queue_backend_changed: ${{ steps.detect.outputs.queue_backend_changed }}
+      show_changed: ${{ steps.detect.outputs.show_changed }}
+      booking_changed: ${{ steps.detect.outputs.booking_changed }}
+      queue_changed: ${{ steps.detect.outputs.queue_changed }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -39,9 +39,9 @@ jobs:
           SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
           SERVER_HOST: ${{ secrets.FRONTEND_SERVER_HOST }}
           SERVER_USER: ${{ secrets.FRONTEND_SERVER_USER }}
-          NCP_REGISTRY_URL: ${{ secrets.NCP_REGISTRY_URL }}
-          NCP_REGISTRY_USERNAME: ${{ secrets.NCP_REGISTRY_USERNAME }}
-          NCP_REGISTRY_PASSWORD: ${{ secrets.NCP_REGISTRY_PASSWORD }}
+          GCP_REGISTRY: ${{ secrets.GCP_REGISTRY }}
+          GCP_SA_KEY: ${{ secrets.GCP_SA_KEY }}
+          
           IMAGE_TAG: ${{ github.sha }}
         run: |
           # SSH 키 설정
@@ -52,11 +52,11 @@ jobs:
 
           # 프론트엔드 서버에 이미지 pull 및 배포
           ssh -i ~/.ssh/deploy_key $SERVER_USER@$SERVER_HOST << EOF
-            # NCP Container Registry 로그인
-            echo "$NCP_REGISTRY_PASSWORD" | docker login $NCP_REGISTRY_URL -u $NCP_REGISTRY_USERNAME --password-stdin
+            # GCP Artifact Registry 로그인
+            echo "$GCP_SA_KEY" | docker login -u _json_key --password-stdin "https://$(echo $GCP_REGISTRY | cut -d/ -f1)"
 
             # CI에서 빌드된 이미지 pull
-            docker pull $NCP_REGISTRY_URL/beastcamp-frontend:$IMAGE_TAG
+            docker pull $GCP_REGISTRY/neticket-frontend:$IMAGE_TAG
 
             # 기존 컨테이너 중지 및 삭제
             docker stop frontend 2>/dev/null || true
@@ -70,7 +70,7 @@ jobs:
               -e NODE_ENV=production \
               -e NEXT_PUBLIC_API_URL=http://localhost/api \
               -e NEXT_PUBLIC_API_MODE=mock \
-              $NCP_REGISTRY_URL/beastcamp-frontend:$IMAGE_TAG
+              $GCP_REGISTRY/neticket-frontend:$IMAGE_TAG
 
             # 이전 이미지 정리 (현재 사용 중인 이미지 제외)
             docker image prune -f
@@ -78,11 +78,11 @@ jobs:
             echo "✅ Frontend deployed successfully from registry (image built in CI)"
           EOF
 
-  # Backend Servers Deploy (api-server + ticket-server)
+  # Backend Servers Deploy (show + booking)
   deploy-backend:
     name: Deploy - Backend Servers
     needs: detect-changes
-    if: needs.detect-changes.outputs.api_server_changed == 'true' || needs.detect-changes.outputs.ticket_server_changed == 'true'
+    if: needs.detect-changes.outputs.show_changed == 'true' || needs.detect-changes.outputs.booking_changed == 'true'
     runs-on: ubuntu-latest
     steps:
       - name: Deploy to backend server
@@ -90,8 +90,8 @@ jobs:
           SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
           SERVER_HOST: ${{ secrets.BACKEND_SERVER_HOST }}
           SERVER_USER: ${{ secrets.BACKEND_SERVER_USER }}
-          API_SERVER_CHANGED: ${{ needs.detect-changes.outputs.api_server_changed }}
-          TICKET_SERVER_CHANGED: ${{ needs.detect-changes.outputs.ticket_server_changed }}
+          SHOW_CHANGED: ${{ needs.detect-changes.outputs.show_changed }}
+          BOOKING_CHANGED: ${{ needs.detect-changes.outputs.booking_changed }}
         run: |
           # SSH 키 설정
           mkdir -p ~/.ssh
@@ -101,7 +101,7 @@ jobs:
 
           # 백엔드 서버에서 빌드 및 배포
           ssh -i ~/.ssh/deploy_key $SERVER_USER@$SERVER_HOST << EOF
-            cd /app/web10-beastcamp
+            cd /app/neticket
 
             # 최신 코드 가져오기
             git fetch origin main
@@ -110,18 +110,18 @@ jobs:
             cd backend
 
             # 변경된 서비스만 재배포
-            if [ "$API_SERVER_CHANGED" == "true" ]; then
-              echo "🚀 Deploying api-server..."
-              docker-compose build api-server
-              docker-compose up -d api-server
-              echo "✅ API Server deployed successfully"
+            if [ "$SHOW_CHANGED" == "true" ]; then
+              echo "🚀 Deploying show..."
+              docker-compose build show
+              docker-compose up -d show
+              echo "✅ show deployed successfully"
             fi
 
-            if [ "$TICKET_SERVER_CHANGED" == "true" ]; then
-              echo "🚀 Deploying ticket-server..."
-              docker-compose build ticket-server
-              docker-compose up -d ticket-server
-              echo "✅ Ticket Server deployed successfully"
+            if [ "$BOOKING_CHANGED" == "true" ]; then
+              echo "🚀 Deploying booking..."
+              docker-compose build booking
+              docker-compose up -d booking
+              echo "✅ booking deployed successfully"
             fi
 
             # 이전 이미지 정리
@@ -129,10 +129,10 @@ jobs:
           EOF
 
   # Queue Backend Deploy
-  deploy-queue-backend:
+  deploy-queue:
     name: Deploy - Queue Backend
     needs: detect-changes
-    if: needs.detect-changes.outputs.queue_backend_changed == 'true'
+    if: needs.detect-changes.outputs.queue_changed == 'true'
     runs-on: ubuntu-latest
     steps:
       - name: Deploy to queue server
@@ -149,14 +149,14 @@ jobs:
 
           # 큐 서버에서 빌드 및 배포
           ssh -i ~/.ssh/deploy_key $SERVER_USER@$SERVER_HOST << 'EOF'
-            cd /app/web10-beastcamp
+            cd /app/neticket
 
             # 최신 코드 가져오기
             git fetch origin main
             git reset --hard origin/main
 
-            # queue-backend 서비스 재배포
-            cd queue-backend
+            # queue 서비스 재배포
+            cd queue
             docker-compose build
             docker-compose up -d
 
@@ -169,7 +169,7 @@ jobs:
   # Deployment Summary
   deployment-summary:
     name: Deployment Summary
-    needs: [detect-changes, deploy-frontend, deploy-backend, deploy-queue-backend]
+    needs: [detect-changes, deploy-frontend, deploy-backend, deploy-queue]
     if: always()
     runs-on: ubuntu-latest
     steps:
@@ -187,7 +187,7 @@ jobs:
           echo "Deployment Results:"
           echo "- Frontend: ${{ needs.deploy-frontend.result }}"
           echo "- Backend (API + Ticket): ${{ needs.deploy-backend.result }}"
-          echo "- Queue Backend: ${{ needs.deploy-queue-backend.result }}"
+          echo "- Queue Backend: ${{ needs.deploy-queue.result }}"
 
           # Check if any deployment failed
           if [ "${{ contains(needs.*.result, 'failure') }}" == "true" ]; then

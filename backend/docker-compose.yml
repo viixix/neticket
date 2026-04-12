@@ -19,12 +19,12 @@ services:
         hard: 65535
     # volumes:
     #   - ./backend/redis_data:/data
-  api-server:
-    image: ${NCP_REGISTRY_URL}/beastcamp-api-server:${IMAGE_TAG:-latest}
-    container_name: api-server
+  show:
+    image: ${GCP_REGISTRY}/neticket-show:${IMAGE_TAG:-latest}
+    container_name: show
     build:
       context: ..
-      dockerfile: backend/api-server/Dockerfile
+      dockerfile: backend/show/Dockerfile
     ports:
       - "3002:3002"
     environment:
@@ -49,12 +49,12 @@ services:
         soft: 65535
         hard: 65535
 
-  ticket-server:
-    image: ${NCP_REGISTRY_URL}/beastcamp-ticket-server:${IMAGE_TAG:-latest}
-    container_name: ticket-server
+  booking:
+    image: ${GCP_REGISTRY}/neticket-booking:${IMAGE_TAG:-latest}
+    container_name: booking
     build:
       context: ..
-      dockerfile: backend/ticket-server/Dockerfile
+      dockerfile: backend/booking/Dockerfile
     ports:
       - "3001:3001"
     environment:
