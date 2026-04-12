@@ -46,7 +46,7 @@ async function request<T = unknown>(
   data?: unknown,
   options: ApiRequestOptions = {},
 ): Promise<T> {
-  const { params, headers = {}, serverType = "api", ...restOptions } = options;
+  const { params, headers = {}, serverType = "show", ...restOptions } = options;
 
   let isMockMode = false;
 

@@ -22,7 +22,7 @@ export const useReservationSeatsQuery = (
       const res = await api.get<ReservationResponse>(
         `/reservations?session_id=${sessionId}&block_id=${blockId}`,
         {
-          serverType: "ticket",
+          serverType: "booking",
           credentials: "include",
           headers: { Authorization: `Bearer ${token}` },
         },

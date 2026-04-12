@@ -34,7 +34,7 @@ export const useNicknameQuery = (sessionId: string | undefined) => {
       const res = await api.get<GetNicknameResponse>(
         `/user/nickname?sessionId=${sessionId}`,
         {
-          serverType: 'api',
+          serverType: 'show',
         },
       );
       return res.nickname;
@@ -49,7 +49,7 @@ export const useChatMessagesQuery = () => {
     queryKey: ['chat', 'messages'],
     queryFn: async () => {
       const res = await api.get<GetMessagesResponse>('/chat/messages', {
-        serverType: 'api',
+        serverType: 'show',
       });
       return res.messages;
     },
@@ -64,7 +64,7 @@ export const useRegisterNicknameMutation = () => {
   return useMutation<{ success: boolean }, Error, RegisterNicknameRequest>({
     mutationFn: async (data: RegisterNicknameRequest) => {
       return await api.post<{ success: boolean }>('/chat/nickname', data, {
-        serverType: 'api',
+        serverType: 'show',
       });
     },
     onSuccess: (_, variables) => {
@@ -82,7 +82,7 @@ export const useSendMessageMutation = () => {
   return useMutation<ChatMessage, Error, SendMessageRequest>({
     mutationFn: async (data: SendMessageRequest) => {
       return await api.post<ChatMessage>('/chat/messages', data, {
-        serverType: 'api',
+        serverType: 'show',
       });
     },
     onSuccess: () => {

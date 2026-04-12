@@ -32,7 +32,7 @@ async function bootstrap() {
   );
 
   const config = new DocumentBuilder()
-    .setTitle('티켓팅 API Server')
+    .setTitle('Booking 서버')
     .setDescription('티켓 예약 및 좌석 조회 기능을 제공합니다.')
     .setVersion('0.1')
     .addBearerAuth(
@@ -52,6 +52,8 @@ async function bootstrap() {
   const document = SwaggerModule.createDocument(app, config);
   SwaggerModule.setup('api-docs', app, document);
 
+  app.setGlobalPrefix('api');
+
   if (process.env.NODE_ENV !== 'production') {
     // CORS 설정
     app.enableCors({
@@ -66,6 +68,6 @@ async function bootstrap() {
     });
   }
 
-  await app.listen(process.env.PORT ?? 3001);
+  await app.listen(process.env.PORT ?? 3002);
 }
 void bootstrap();
