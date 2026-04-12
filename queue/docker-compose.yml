@@ -1,0 +1,84 @@
+version: '3.8'
+
+services:
+  redis:
+    image: redis:7.2-alpine
+    container_name: queue-redis
+    ports:
+      - '6379:6379'
+    networks:
+      - queue-network
+    healthcheck:
+      test: ['CMD', 'redis-cli', 'ping']
+      interval: 5s
+      timeout: 3s
+      retries: 5
+    ulimits:
+      nofile:
+        soft: 65535
+        hard: 65535
+    # volumes:
+    #   - ./queue-backend/redis_data:/data
+  queue:
+    image: ${GCP_REGISTRY}/neticket-queue:${IMAGE_TAG:-latest}
+    container_name: queue
+    ports:
+      - '3003:3003'
+    environment:
+      - NODE_ENV=production
+    env_file:
+      - .env
+    restart: unless-stopped
+    depends_on:
+      redis:
+        condition: service_healthy
+    networks:
+      - queue-network
+    logging:
+      driver: 'json-file'
+      options:
+        max-size: '10m'
+        max-file: '3'
+    ulimits:
+      nofile:
+        soft: 65535
+        hard: 65535
+
+  promtail:
+    image: grafana/promtail:3.3.0
+    container_name: promtail-queue
+    user: root
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - ./promtail-config.yaml:/etc/promtail/config.yaml
+    command: -config.file=/etc/promtail/config.yaml -config.expand-env=true
+    env_file:
+      - .env
+    environment:
+      - LOKI_URL=${LOKI_URL}
+    networks:
+      - queue-network
+    logging:
+      driver: 'json-file'
+      options:
+        max-size: '10m'
+        max-file: '3'
+
+  cadvisor:
+    image: gcr.io/cadvisor/cadvisor:v0.47.2
+    container_name: cadvisor-queue
+    restart: unless-stopped
+    ports:
+      - '8080:8080'
+    volumes:
+      - /:/rootfs:ro
+      - /var/run:/var/run:ro
+      - /sys:/sys:ro
+      - /var/lib/docker/:/var/lib/docker:ro
+      - /dev/disk/:/dev/disk:ro
+    networks:
+      - queue-network
+
+networks:
+  queue-network:
+    driver: bridge
