@@ -1,23 +1,23 @@
 {
-  "name": "@beastcamp/monorepo",
+  "name": "@neticket/monorepo",
   "version": "1.0.0",
   "private": true,
-  "description": "Beastcamp ticketing system monorepo",
+  "description": "Neticket ticketing system monorepo",
   "scripts": {
     "prepare": "husky",
-    "dev:api": "pnpm --filter @beastcamp/api-server start:dev",
-    "dev:ticket": "pnpm --filter @beastcamp/ticket-server start:dev",
-    "dev:queue": "pnpm infra:queue && pnpm --filter @beastcamp/queue-backend start:dev",
+    "dev:show": "pnpm --filter @neticket/show start:dev",
+    "dev:booking": "pnpm --filter @neticket/booking start:dev",
+    "dev:queue": "pnpm infra:queue && pnpm --filter @neticket/queue start:dev",
     "dev:frontend": "pnpm --filter frontend dev",
-    "build:api": "pnpm --filter @beastcamp/api-server build",
-    "build:ticket": "pnpm --filter @beastcamp/ticket-server build",
-    "build:queue": "pnpm --filter @beastcamp/queue-backend build",
+    "build:show": "pnpm --filter @neticket/show build",
+    "build:booking": "pnpm --filter @neticket/booking build",
+    "build:queue": "pnpm --filter @neticket/queue build",
     "build:frontend": "pnpm --filter frontend build",
-    "infra:queue": "pnpm --filter @beastcamp/queue-backend infra:up",
-    "infra:queue:down": "pnpm --filter @beastcamp/queue-backend infra:down",
-    "lint:api": "pnpm --filter @beastcamp/api-server lint",
-    "lint:ticket": "pnpm --filter @beastcamp/ticket-server lint",
-    "lint:queue": "pnpm --filter @beastcamp/queue-backend lint",
+    "infra:queue": "pnpm --filter @neticket/queue infra:up",
+    "infra:queue:down": "pnpm --filter @neticket/queue infra:down",
+    "lint:show": "pnpm --filter @neticket/show lint",
+    "lint:booking": "pnpm --filter @neticket/booking lint",
+    "lint:queue": "pnpm --filter @neticket/queue lint",
     "lint:frontend": "pnpm --filter frontend lint",
     "preinstall": "npx only-allow pnpm"
   },
@@ -27,17 +27,17 @@
     "lint-staged": "^16.2.7"
   },
   "lint-staged": {
-    "backend/api-server/**/*.{ts,tsx,js,jsx}": [
-      "pnpm --filter @beastcamp/api-server lint"
+    "backend/show/**/*.{ts,tsx,js,jsx}": [
+      "pnpm --filter @neticket/show lint"
     ],
-    "backend/ticket-server/**/*.{ts,tsx,js,jsx}": [
-      "pnpm --filter @beastcamp/ticket-server lint"
+    "backend/booking/**/*.{ts,tsx,js,jsx}": [
+      "pnpm --filter @neticket/booking lint"
     ],
-    "queue-backend/**/*.{ts,tsx,js,jsx}": [
-      "pnpm --filter @beastcamp/queue-backend lint"
+    "queue/**/*.{ts,tsx,js,jsx}": [
+      "pnpm --filter @neticket/queue lint"
     ],
     "frontend/**/*.{ts,tsx,js,jsx}": [
-      "pnpm --filter @beastcamp/frontend lint"
+      "pnpm --filter frontend lint"
     ]
   }
 }

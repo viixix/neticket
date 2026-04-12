@@ -5,7 +5,7 @@ import { TraceService } from "../trace/trace.service";
 
 /**
  * 모든 서버에서 공통으로 사용할 Winston 로거 설정을 반환합니다.
- * @param serviceName 서비스 식별자 (예: 'api-server', 'ticket-server', 'queue-backend')
+ * @param serviceName 서비스 식별자 (예: 'show', 'booking', 'queue')
  */
 export const getWinstonLogger = (
   serviceName: string,

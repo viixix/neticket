@@ -1,5 +1,5 @@
 {
-  "name": "@beastcamp/shared-nestjs",
+  "name": "@neticket/shared-nestjs",
   "version": "1.0.0",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
