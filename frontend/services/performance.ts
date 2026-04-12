@@ -23,7 +23,7 @@ export async function getLatestPerformance() {
     `/performances?limit=1&ticketing_after=${formattedDate}`,
     {
       next: {
-        revalidate: 60,
+        revalidate: process.env.NODE_ENV === 'production' ? 60 : 0,
         tags: ['performance', 'latest-performance'],
       },
     },
