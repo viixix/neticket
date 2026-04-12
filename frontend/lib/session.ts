@@ -25,7 +25,7 @@ export async function getOrCreateSessionId(): Promise<string> {
     const response = await api.post<GenerateSessionResponse>(
       '/user/session',
       {},
-      { serverType: 'api' },
+      { serverType: 'show' },
     );
     const sessionId = response.sessionId;
 

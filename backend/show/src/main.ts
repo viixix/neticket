@@ -47,13 +47,13 @@ async function bootstrap() {
   );
 
   const config = new DocumentBuilder()
-    .setTitle('일반 API Server')
+    .setTitle('Show 서버')
     .setDescription('공연, 공연장 정보를 제공합니다.')
     .setVersion('0.1')
     .build();
   const document = SwaggerModule.createDocument(app, config);
   SwaggerModule.setup('api-docs', app, document);
 
-  await app.listen(process.env.PORT ?? 3002);
+  await app.listen(process.env.PORT ?? 3001);
 }
 void bootstrap();

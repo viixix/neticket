@@ -1,9 +1,9 @@
 import { useState, useEffect } from "react";
-import { API_PREFIX } from "@/constants/api";
+import { SHOW_PREFIX } from "@/constants/api";
 
 function getShowBaseUrl(): string {
   if (process.env.NEXT_PUBLIC_API_MODE === "mock") return "";
-  return API_PREFIX.replace(/\/api$/, "");
+  return SHOW_PREFIX.replace(/\/api$/, "");
 }
 
 export const useStageSvg = (blockMapUrl: string | null | undefined) => {

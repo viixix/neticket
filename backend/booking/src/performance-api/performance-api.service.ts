@@ -35,7 +35,7 @@ export interface VenueResponse {
 @Injectable()
 export class PerformanceApiService {
   private readonly baseUrl =
-    process.env.PERFORMANCE_API_URL || 'http://localhost:3002';
+    process.env.SHOW_SERVER_URL || 'http://localhost:3001';
 
   constructor(private readonly httpService: HttpService) {}
 

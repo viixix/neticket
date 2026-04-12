@@ -28,7 +28,7 @@ export const useScheduledTicketingQuery = (
       }
 
       const res = await api.get<ResponsePerformances>("/performances", {
-        serverType: "api",
+        serverType: "show",
         params,
       });
 

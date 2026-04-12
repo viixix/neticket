@@ -23,7 +23,7 @@ export interface VerifyCaptchaResponse {
  * 대신 getServerUrl을 활용하여 서버 URL을 가져옵니다.
  */
 export async function fetchCaptcha(token: string): Promise<CaptchaResponse> {
-  const ticketServerUrl = getServerUrl("ticket");
+  const ticketServerUrl = getServerUrl("booking");
 
   const response = await fetch(`${ticketServerUrl}/captcha`, {
     method: "GET",
@@ -68,7 +68,7 @@ export async function verifyCaptcha(
     "/captcha/verify",
     { captchaId, userInput },
     {
-      serverType: "ticket",
+      serverType: "booking",
       credentials: "include",
     },
   );

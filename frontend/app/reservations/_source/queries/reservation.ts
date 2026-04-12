@@ -26,7 +26,7 @@ export const useReservationMutation = (token: string) => {
         "/reservations",
         payload,
         {
-          serverType: "ticket",
+          serverType: "booking",
           headers: { Authorization: `Bearer ${token}` },
         },
       );

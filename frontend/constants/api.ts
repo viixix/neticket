@@ -1,23 +1,23 @@
 import { isExperienceMode } from "@/lib/utils";
 
 // 서버 타입 정의
-export type ServerType = "api" | "ticket" | "queue";
+export type ServerType = "show" | "booking" | "queue";
 
-// API 서버 엔드포인트 (Mock 모드 지원)
-export const API_PREFIX =
-  process.env.NEXT_PUBLIC_API_URL || "http://localhost:3002/api";
+// Show 서버 엔드포인트
+export const SHOW_PREFIX =
+  process.env.NEXT_PUBLIC_SHOW_SERVER_URL || "http://localhost:3001/api";
 
-// 티켓 서버 엔드포인트
-export const TICKET_PREFIX =
-  process.env.NEXT_PUBLIC_TICKET_SERVER_URL || "http://localhost:3001";
+// Booking 서버 엔드포인트
+export const BOOKING_PREFIX =
+  process.env.NEXT_PUBLIC_BOOKING_SERVER_URL || "http://localhost:3002/api";
 
-// 큐 서버 엔드포인트
+// Queue 서버 엔드포인트
 export const QUEUE_PREFIX =
   process.env.NEXT_PUBLIC_QUEUE_SERVER_URL || "http://localhost:3003/api";
 
 // 서버 타입별 URL 반환
 export function getServerUrl(
-  serverType: ServerType = "api",
+  serverType: ServerType = "show",
   isMockMode?: boolean,
 ): string {
   // 1. 환경 변수 체크
@@ -37,13 +37,13 @@ export function getServerUrl(
   }
 
   switch (serverType) {
-    case "ticket":
-      return TICKET_PREFIX;
+    case "booking":
+      return BOOKING_PREFIX;
     case "queue":
       return QUEUE_PREFIX;
-    case "api":
-      return API_PREFIX;
+    case "show":
+      return SHOW_PREFIX;
     default:
-      return API_PREFIX;
+      return SHOW_PREFIX;
   }
 }
