@@ -2,7 +2,7 @@
   "compilerOptions": {
     "baseUrl": ".",
     "paths": {
-      "@beastcamp/*": ["packages/*/src"]
+      "@neticket/*": ["packages/*/src"]
     }
   }
 }
