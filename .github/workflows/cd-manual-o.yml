@@ -10,9 +10,9 @@ on:
         type: choice
         options:
           - backend
-          - api-server
-          - ticket-server
-          - queue-backend
+          - show
+          - booking
+          - queue
           - all
       branch:
         description: "배포할 브랜치"
@@ -33,9 +33,9 @@ jobs:
         run: |
           SERVICES="${{ github.event.inputs.services }}"
           if [ "$SERVICES" = "all" ]; then
-            JSON='["api-server", "ticket-server", "queue-backend"]'
+            JSON='["show", "booking", "queue"]'
           elif [ "$SERVICES" = "backend" ]; then
-            JSON='["api-server", "ticket-server"]'
+            JSON='["show", "booking"]'
           else
             JSON="[\"$SERVICES\"]"
           fi
@@ -61,20 +61,20 @@ jobs:
       - name: Docker Buildx 설치
         uses: docker/setup-buildx-action@v3
 
-      - name: NCP 레지스트리 로그인
+      - name: GCP Artifact Registry 로그인
         uses: docker/login-action@v3
         with:
-          registry: ${{ secrets.NCP_REGISTRY_URL }}
-          username: ${{ secrets.NCP_REGISTRY_USERNAME }}
-          password: ${{ secrets.NCP_REGISTRY_PASSWORD }}
+          registry: ${{ secrets.GCP_REGISTRY_HOST }}
+          username: _json_key
+          password: ${{ secrets.GCP_SA_KEY }}
 
       - name: ${{ matrix.service }} 빌드 및 푸시
         uses: docker/build-push-action@v5
         with:
           context: .
-          file: ${{ matrix.service == 'queue-backend' && 'queue-backend/Dockerfile' || format('backend/{0}/Dockerfile', matrix.service) }}
+          file: ${{ matrix.service == 'queue' && 'queue/Dockerfile' || format('backend/{0}/Dockerfile', matrix.service) }}
           push: true
-          tags: ${{ secrets.NCP_REGISTRY_URL }}/beastcamp-${{ matrix.service }}:${{ github.sha }}
+          tags: ${{ secrets.GCP_REGISTRY }}/neticket-${{ matrix.service }}:${{ github.sha }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
@@ -82,18 +82,18 @@ jobs:
   deploy-backend:
     name: Deploy (backend) - ${{ matrix.service }}
     needs: [resolve-targets, build-and-push]
-    if: needs.resolve-targets.outputs.has_targets == 'true' && (contains(needs.resolve-targets.outputs.matrix, 'api-server') || contains(needs.resolve-targets.outputs.matrix, 'ticket-server'))
+    if: needs.resolve-targets.outputs.has_targets == 'true' && (contains(needs.resolve-targets.outputs.matrix, 'show') || contains(needs.resolve-targets.outputs.matrix, 'booking'))
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
       max-parallel: 1
       matrix:
         include:
-          - service: api-server
+          - service: show
             host_secret: BACKEND_SERVER_HOST
             user_secret: BACKEND_SERVER_USER
             pass_secret: BACKEND_SERVER_PASSWORD
-          - service: ticket-server
+          - service: booking
             host_secret: BACKEND_SERVER_HOST
             user_secret: BACKEND_SERVER_USER
             pass_secret: BACKEND_SERVER_PASSWORD
@@ -105,27 +105,27 @@ jobs:
           host: ${{ secrets[matrix.host_secret] }}
           username: ${{ secrets[matrix.user_secret] }}
           password: ${{ secrets[matrix.pass_secret] }}
-          envs: NCP_REGISTRY_URL,NCP_REGISTRY_USERNAME,NCP_REGISTRY_PASSWORD,IMAGE_TAG,SERVICE_NAME,TARGET_BRANCH,LOKI_URL
+          envs: GCP_REGISTRY,GCP_SA_KEY,IMAGE_TAG,SERVICE_NAME,TARGET_BRANCH,LOKI_URL
           script: |
-            cd /app/web10-beastcamp
+            cd /app/neticket
 
             # 1. 최신 코드 동기화
             git fetch origin $TARGET_BRANCH
             git reset --hard origin/$TARGET_BRANCH
 
             # 2. 서비스 위치로 이동
-            [ "$SERVICE_NAME" == "queue-backend" ] && cd queue-backend || cd backend
+            [ "$SERVICE_NAME" == "queue" ] && cd queue || cd backend
 
             # 3. 환경 변수 설정 (LOKI_URL 주입)
             if [ ! -f .env ]; then touch .env; fi
             sed -i '/^LOKI_URL=/d' .env
             echo "LOKI_URL=$LOKI_URL" >> .env
 
-            # 4. NCP 레지스트리 로그인
-            echo "$NCP_REGISTRY_PASSWORD" | docker login "$NCP_REGISTRY_URL" -u "$NCP_REGISTRY_USERNAME" --password-stdin
+            # 4. GCP Artifact Registry 로그인
+            echo "$GCP_SA_KEY" | docker login -u _json_key --password-stdin "https://$(echo $GCP_REGISTRY | cut -d/ -f1)"
 
             # 5. 배포 (Clean Export 문법 반영 및 --wait 적용)
-            export IMAGE_TAG NCP_REGISTRY_URL SERVICE_NAME LOKI_URL
+            export IMAGE_TAG GCP_REGISTRY SERVICE_NAME LOKI_URL
 
             echo "🚀 $SERVICE_NAME 배포 중 (Healthcheck 대기)..."
             docker compose pull $SERVICE_NAME promtail cadvisor
@@ -138,16 +138,15 @@ jobs:
           IMAGE_TAG: ${{ github.sha }}
           SERVICE_NAME: ${{ matrix.service }}
           TARGET_BRANCH: ${{ github.event.inputs.branch }}
-          NCP_REGISTRY_URL: ${{ secrets.NCP_REGISTRY_URL }}
-          NCP_REGISTRY_USERNAME: ${{ secrets.NCP_REGISTRY_USERNAME }}
-          NCP_REGISTRY_PASSWORD: ${{ secrets.NCP_REGISTRY_PASSWORD }}
+          GCP_REGISTRY: ${{ secrets.GCP_REGISTRY }}
+          GCP_SA_KEY: ${{ secrets.GCP_SA_KEY }}
           LOKI_URL: ${{ secrets.LOKI_URL }}
 
   # 3b: 큐 호스트 — 백엔드 deploy-backend와 서로 needs 없음 → all 선택 시 병렬 실행
   deploy-queue:
-    name: Deploy (queue) - queue-backend
+    name: Deploy (queue) - queue
     needs: [resolve-targets, build-and-push]
-    if: needs.resolve-targets.outputs.has_targets == 'true' && contains(needs.resolve-targets.outputs.matrix, 'queue-backend')
+    if: needs.resolve-targets.outputs.has_targets == 'true' && contains(needs.resolve-targets.outputs.matrix, 'queue')
     runs-on: ubuntu-latest
     steps:
       - name: 배포 실행
@@ -156,27 +155,27 @@ jobs:
           host: ${{ secrets.QUEUE_SERVER_HOST }}
           username: ${{ secrets.QUEUE_SERVER_USER }}
           password: ${{ secrets.QUEUE_SERVER_PASSWORD }}
-          envs: NCP_REGISTRY_URL,NCP_REGISTRY_USERNAME,NCP_REGISTRY_PASSWORD,IMAGE_TAG,SERVICE_NAME,TARGET_BRANCH,LOKI_URL
+          envs: GCP_REGISTRY,GCP_SA_KEY,IMAGE_TAG,SERVICE_NAME,TARGET_BRANCH,LOKI_URL
           script: |
-            cd /app/web10-beastcamp
+            cd /app/neticket
 
             # 1. 최신 코드 동기화
             git fetch origin $TARGET_BRANCH
             git reset --hard origin/$TARGET_BRANCH
 
             # 2. 서비스 위치로 이동
-            [ "$SERVICE_NAME" == "queue-backend" ] && cd queue-backend || cd backend
+            [ "$SERVICE_NAME" == "queue" ] && cd queue || cd backend
 
             # 3. 환경 변수 설정 (LOKI_URL 주입)
             if [ ! -f .env ]; then touch .env; fi
             sed -i '/^LOKI_URL=/d' .env
             echo "LOKI_URL=$LOKI_URL" >> .env
 
-            # 4. NCP 레지스트리 로그인
-            echo "$NCP_REGISTRY_PASSWORD" | docker login "$NCP_REGISTRY_URL" -u "$NCP_REGISTRY_USERNAME" --password-stdin
+            # 4. GCP Artifact Registry 로그인
+            echo "$GCP_SA_KEY" | docker login -u _json_key --password-stdin "https://$(echo $GCP_REGISTRY | cut -d/ -f1)"
 
             # 5. 배포 (Clean Export 문법 반영 및 --wait 적용)
-            export IMAGE_TAG NCP_REGISTRY_URL SERVICE_NAME LOKI_URL
+            export IMAGE_TAG GCP_REGISTRY SERVICE_NAME LOKI_URL
 
             echo "🚀 $SERVICE_NAME 배포 중 (Healthcheck 대기)..."
             docker compose pull $SERVICE_NAME promtail cadvisor
@@ -187,11 +186,10 @@ jobs:
             echo "✅ $SERVICE_NAME 배포 완료"
         env:
           IMAGE_TAG: ${{ github.sha }}
-          SERVICE_NAME: queue-backend
+          SERVICE_NAME: queue
           TARGET_BRANCH: ${{ github.event.inputs.branch }}
-          NCP_REGISTRY_URL: ${{ secrets.NCP_REGISTRY_URL }}
-          NCP_REGISTRY_USERNAME: ${{ secrets.NCP_REGISTRY_USERNAME }}
-          NCP_REGISTRY_PASSWORD: ${{ secrets.NCP_REGISTRY_PASSWORD }}
+          GCP_REGISTRY: ${{ secrets.GCP_REGISTRY }}
+          GCP_SA_KEY: ${{ secrets.GCP_SA_KEY }}
           LOKI_URL: ${{ secrets.LOKI_URL }}
 
   # 4단계: 결과 요약

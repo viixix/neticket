@@ -30,7 +30,7 @@ scrape_configs:
             context: context
             timestamp: timestamp
 
-      # Grafana 필터링 라벨 등록 (예: {level="error", service="api-server", context="AuthService"})
+      # Grafana 필터링 라벨 등록 (예: {level="error", service="show", context="AuthService"})
       - labels:
           level:
           service:

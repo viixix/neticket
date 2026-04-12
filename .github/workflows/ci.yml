@@ -122,16 +122,16 @@ jobs:
         run: pnpm --filter "./packages/*" build
 
       - name: 🧹 Run Lint
-        run: pnpm --filter @beastcamp/${{ matrix.service }} lint
+        run: pnpm --filter @neticket/${{ matrix.service }} lint
 
       - name: 🧪 Run Unit Tests
-        run: pnpm --filter @beastcamp/${{ matrix.service }} test
+        run: pnpm --filter @neticket/${{ matrix.service }} test
 
       - name: 🐳 Docker Build Check
         uses: docker/build-push-action@v5
         with:
           context: .
-          file: ${{ matrix.service == 'queue-backend' && 'queue-backend/Dockerfile' || format('backend/{0}/Dockerfile', matrix.service) }}
+          file: ${{ matrix.service == 'queue' && 'queue/Dockerfile' || format('backend/{0}/Dockerfile', matrix.service) }}
           push: false
           cache-from: type=gha
           cache-to: type=gha,mode=max

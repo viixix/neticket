@@ -19,7 +19,7 @@ CHANGED_SERVICES=()
 GLOBAL_FILES="pnpm-lock.yaml|pnpm-workspace.yaml|package.json|.github/workflows/ci.yml"
 if echo "$CHANGED_FILES" | grep -E -q "$GLOBAL_FILES"; then
   echo "🚨 Global config changed! Triggering CI for all services."
-  CHANGED_SERVICES=("frontend" "api-server" "ticket-server" "queue-backend")
+  CHANGED_SERVICES=("frontend" "show" "booking" "queue")
 else
 
   # 각 서비스별 변경 감지
@@ -50,14 +50,14 @@ else
 
   # 서비스별 변경 감지
   check_service_change "frontend" "frontend" || true
-  check_service_change "api-server" "backend/api-server" || true
-  check_service_change "ticket-server" "backend/ticket-server" || true
-  check_service_change "queue-backend" "queue-backend" || true
+  check_service_change "show" "backend/show" || true
+  check_service_change "booking" "backend/booking" || true
+  check_service_change "queue" "queue" || true
 
   # 공통 패키지 변경 시 의존 서비스 추가
-  check_package_dependencies "shared-types" "api-server" "ticket-server" "queue-backend"
-  check_package_dependencies "shared-nestjs" "ticket-server" "queue-backend" "api-server"
-  check_package_dependencies "shared-constants" "ticket-server" "queue-backend"
+  check_package_dependencies "shared-types" "show" "booking" "queue"
+  check_package_dependencies "shared-nestjs" "booking" "queue" "show"
+  check_package_dependencies "shared-constants" "booking" "queue"
 fi
 
 # 결과 출력
@@ -86,7 +86,7 @@ else
 fi
 
 # 개별 서비스 플래그 설정 (변경 여부와 관계없이 항상 설정)
-for service in "frontend" "api-server" "ticket-server" "queue-backend"; do
+for service in "frontend" "show" "booking" "queue"; do
   VAR_NAME="${service//-/_}_changed"
   if [[ " ${CHANGED_SERVICES[@]} " =~ " ${service} " ]]; then
     echo "${VAR_NAME}=true" >> "$GITHUB_OUTPUT"
