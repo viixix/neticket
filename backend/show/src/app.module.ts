@@ -10,6 +10,14 @@ import { SeedingModule } from './seeding/seeding.module';
 import { KopisModule } from './kopis/kopis.module';
 import { ChatModule } from './chat/chat.module';
 import { UserModule } from './user/user.module';
+import { Venue } from './venues/entities/venue.entity';
+import { Block } from './venues/entities/block.entity';
+import { Performance } from './performances/entities/performance.entity';
+import { Session } from './performances/entities/session.entity';
+import { Grade } from './performances/entities/grade.entity';
+import { BlockGrade } from './performances/entities/block-grade.entity';
+import { ChatMessage } from './chat/entities/chat-message.entity';
+import { UserNickname } from './chat/entities/user-nickname.entity';
 import {
   GlobalExceptionFilter,
   TraceMiddleware,
@@ -30,11 +38,21 @@ import {
     ScheduleModule.forRoot(),
     TypeOrmModule.forRootAsync({
       useFactory: () => {
+        const entities = [
+          Venue,
+          Block,
+          Performance,
+          Session,
+          Grade,
+          BlockGrade,
+          ChatMessage,
+          UserNickname,
+        ];
         if (process.env.NODE_ENV === 'test' || process.env.NODE_ENV === 'dev') {
           return {
             type: 'sqlite',
             database: ':memory:',
-            entities: [__dirname + '/**/*.entity{.ts,.js}'],
+            entities,
             synchronize: true,
             logging: process.env.NODE_ENV === 'dev',
           };
@@ -46,7 +64,7 @@ import {
           username: process.env.DB_USERNAME || 'app',
           password: process.env.DB_PASSWORD || 'test',
           database: process.env.DB_DATABASE || 'ticketing',
-          entities: [__dirname + '/**/*.entity{.ts,.js}'],
+          entities,
           synchronize: false,
           logging: true,
           timezone: 'Z',
