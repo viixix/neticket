@@ -64,7 +64,7 @@ jobs:
       - name: GCP Artifact Registry 로그인
         uses: docker/login-action@v3
         with:
-          registry: ${{ secrets.GCP_REGISTRY_HOST }}
+          registry: ${{ vars.GCP_REGISTRY_HOST }}
           username: _json_key
           password: ${{ secrets.GCP_SA_KEY }}
 
@@ -74,7 +74,7 @@ jobs:
           context: .
           file: ${{ matrix.service == 'queue' && 'queue/Dockerfile' || format('backend/{0}/Dockerfile', matrix.service) }}
           push: true
-          tags: ${{ secrets.GCP_REGISTRY }}/${{ matrix.service }}:${{ github.sha }}
+          tags: ${{ vars.GCP_REGISTRY }}/${{ matrix.service }}:${{ github.sha }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
