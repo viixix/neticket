@@ -51,7 +51,7 @@ export class TicketSetupService {
       ...sessionIds,
     );
 
-    await this.redisService.publishToTicket(
+    await this.redisService.publishToCore(
       REDIS_CHANNELS.TICKETING_STATE_CHANGED,
       'setup',
     );
@@ -73,7 +73,7 @@ export class TicketSetupService {
       });
 
       void this.redisService
-        .publishToTicket(REDIS_CHANNELS.TICKETING_STATE_CHANGED, payload)
+        .publishToCore(REDIS_CHANNELS.TICKETING_STATE_CHANGED, payload)
         .catch((e) => {
           this.logger.warn('오픈 이벤트 발행 실패', (e as Error).stack);
         });
@@ -105,7 +105,7 @@ export class TicketSetupService {
       });
 
       void this.redisService
-        .publishToTicket(REDIS_CHANNELS.TICKETING_STATE_CHANGED, payload)
+        .publishToCore(REDIS_CHANNELS.TICKETING_STATE_CHANGED, payload)
         .catch((e) => {
           this.logger.warn('종료 이벤트 발행 실패', (e as Error).stack);
         });

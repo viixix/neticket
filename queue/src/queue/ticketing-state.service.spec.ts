@@ -10,14 +10,14 @@ import { TraceService } from '@neticket/shared-nestjs';
 describe('TicketingStateService', () => {
   let service: TicketingStateService;
   let module: TestingModule;
-  let ticketRedisMock: { get: jest.Mock; duplicate: jest.Mock };
+  let coreRedisMock: { get: jest.Mock; duplicate: jest.Mock };
   let subscriberMock: { subscribe: jest.Mock; on: jest.Mock; quit: jest.Mock };
 
   const buildModule = async (): Promise<TestingModule> => {
     const m = await Test.createTestingModule({
       providers: [
         TicketingStateService,
-        { provide: PROVIDERS.REDIS_TICKET, useValue: ticketRedisMock },
+        { provide: PROVIDERS.REDIS_CORE, useValue: coreRedisMock },
         {
           provide: TraceService,
           useValue: {
@@ -39,7 +39,7 @@ describe('TicketingStateService', () => {
       on: jest.fn(),
       quit: jest.fn().mockResolvedValue(undefined),
     };
-    ticketRedisMock = {
+    coreRedisMock = {
       get: jest.fn(),
       duplicate: jest.fn().mockReturnValue(subscriberMock),
     };
@@ -57,35 +57,33 @@ describe('TicketingStateService', () => {
 
   describe('isOpen - Redis 조회 결과 반환', () => {
     it("Redis가 'true'를 반환하면 isOpen은 true다", async () => {
-      ticketRedisMock.get.mockResolvedValueOnce('true');
+      coreRedisMock.get.mockResolvedValueOnce('true');
       module = await buildModule();
 
       expect(await service.isOpen()).toBe(true);
     });
 
     it("Redis가 'false'를 반환하면 isOpen은 false다", async () => {
-      ticketRedisMock.get.mockResolvedValueOnce('false');
+      coreRedisMock.get.mockResolvedValueOnce('false');
       module = await buildModule();
 
       expect(await service.isOpen()).toBe(false);
     });
 
     it('Redis가 null을 반환하면 isOpen은 false다 (기본값)', async () => {
-      ticketRedisMock.get.mockResolvedValueOnce(null);
+      coreRedisMock.get.mockResolvedValueOnce(null);
       module = await buildModule();
 
       expect(await service.isOpen()).toBe(false);
     });
 
     it('TICKETING_OPEN 키로 Redis를 조회한다', async () => {
-      ticketRedisMock.get.mockResolvedValueOnce('true');
+      coreRedisMock.get.mockResolvedValueOnce('true');
       module = await buildModule();
 
       await service.isOpen();
 
-      expect(ticketRedisMock.get).toHaveBeenCalledWith(
-        REDIS_KEYS.TICKETING_OPEN,
-      );
+      expect(coreRedisMock.get).toHaveBeenCalledWith(REDIS_KEYS.TICKETING_OPEN);
     });
   });
 
@@ -97,47 +95,47 @@ describe('TicketingStateService', () => {
     it('TTL(1000ms) 내 재호출 시 Redis를 재조회하지 않는다', async () => {
       jest.useFakeTimers();
       jest.setSystemTime(new Date(10000));
-      ticketRedisMock.get.mockResolvedValue('true');
+      coreRedisMock.get.mockResolvedValue('true');
       module = await buildModule();
 
       await service.isOpen(); // 첫 조회 → lastSyncAt = 10000
       jest.setSystemTime(new Date(10500)); // 500ms 경과 (< 1000ms TTL)
       await service.isOpen(); // 캐시 사용
 
-      expect(ticketRedisMock.get).toHaveBeenCalledTimes(1);
+      expect(coreRedisMock.get).toHaveBeenCalledTimes(1);
     });
 
     it('TTL(1000ms) 만료 후 재호출 시 Redis를 다시 조회한다', async () => {
       jest.useFakeTimers();
       jest.setSystemTime(new Date(10000));
-      ticketRedisMock.get.mockResolvedValue('true');
+      coreRedisMock.get.mockResolvedValue('true');
       module = await buildModule();
 
       await service.isOpen(); // 첫 조회
       jest.setSystemTime(new Date(11001)); // 1001ms 경과 (> 1000ms TTL)
       await service.isOpen(); // 캐시 만료 → 재조회
 
-      expect(ticketRedisMock.get).toHaveBeenCalledTimes(2);
+      expect(coreRedisMock.get).toHaveBeenCalledTimes(2);
     });
 
     it('TTL 경계값(정확히 1000ms)에서는 캐시가 만료되어 재조회한다', async () => {
       // 조건: now - lastSyncAt < CACHE_TTL(1000) → 정확히 1000ms면 false → 재조회
       jest.useFakeTimers();
       jest.setSystemTime(new Date(10000));
-      ticketRedisMock.get.mockResolvedValue('true');
+      coreRedisMock.get.mockResolvedValue('true');
       module = await buildModule();
 
       await service.isOpen();
       jest.setSystemTime(new Date(11000)); // 정확히 1000ms 경과 → < 아님 → 재조회
       await service.isOpen();
 
-      expect(ticketRedisMock.get).toHaveBeenCalledTimes(2);
+      expect(coreRedisMock.get).toHaveBeenCalledTimes(2);
     });
 
     it('캐시된 상태에서 티켓팅 상태가 바뀌어도 TTL 내에는 이전 값을 반환한다', async () => {
       jest.useFakeTimers();
       jest.setSystemTime(new Date(10000));
-      ticketRedisMock.get
+      coreRedisMock.get
         .mockResolvedValueOnce('true') // 첫 조회: open
         .mockResolvedValueOnce('false'); // 두 번째 조회: closed
       module = await buildModule();
@@ -158,7 +156,7 @@ describe('TicketingStateService', () => {
   describe('동시 갱신 방지', () => {
     it('동시에 여러 번 isOpen 호출 시 Redis는 한 번만 조회한다', async () => {
       let resolveGet!: (v: string) => void;
-      ticketRedisMock.get.mockReturnValue(
+      coreRedisMock.get.mockReturnValue(
         new Promise<string>((resolve) => {
           resolveGet = resolve;
         }),
@@ -172,7 +170,7 @@ describe('TicketingStateService', () => {
       resolveGet('true');
       await Promise.all([call1, call2]);
 
-      expect(ticketRedisMock.get).toHaveBeenCalledTimes(1);
+      expect(coreRedisMock.get).toHaveBeenCalledTimes(1);
     });
   });
 
@@ -228,7 +226,7 @@ describe('TicketingStateService', () => {
 
   describe('실패 경로', () => {
     it('Redis get 에러 시 isOpen은 false를 반환한다 (기본값 유지)', async () => {
-      ticketRedisMock.get.mockRejectedValueOnce(new Error('Redis down'));
+      coreRedisMock.get.mockRejectedValueOnce(new Error('Redis down'));
       module = await buildModule();
 
       const result = await service.isOpen();
@@ -237,7 +235,7 @@ describe('TicketingStateService', () => {
     });
 
     it('Redis 에러 발생 후 다음 호출에서 재조회를 시도한다', async () => {
-      ticketRedisMock.get
+      coreRedisMock.get
         .mockRejectedValueOnce(new Error('Redis down'))
         .mockResolvedValueOnce('true');
       module = await buildModule();
@@ -245,7 +243,7 @@ describe('TicketingStateService', () => {
       await service.isOpen(); // 실패 → lastSyncAt = 0 유지
       await service.isOpen(); // 재조회 시도
 
-      expect(ticketRedisMock.get).toHaveBeenCalledTimes(2);
+      expect(coreRedisMock.get).toHaveBeenCalledTimes(2);
     });
   });
 });

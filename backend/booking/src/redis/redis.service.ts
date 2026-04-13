@@ -12,14 +12,14 @@ interface RedisWithCommands extends Redis {
 @Injectable()
 export class RedisService implements OnModuleDestroy {
   constructor(
-    @Inject(PROVIDERS.REDIS_TICKET)
-    private readonly ticketClient: RedisWithCommands,
+    @Inject(PROVIDERS.REDIS_CORE)
+    private readonly coreClient: RedisWithCommands,
     @Inject(PROVIDERS.REDIS_QUEUE)
     private readonly queueClient: Redis,
   ) {}
 
   onModuleDestroy() {
-    this.ticketClient.disconnect();
+    this.coreClient.disconnect();
     this.queueClient.disconnect();
   }
 
@@ -28,7 +28,7 @@ export class RedisService implements OnModuleDestroy {
     userId: string,
     rankKey: string,
   ): Promise<[number, number]> {
-    return this.ticketClient.atomicReservation(
+    return this.coreClient.atomicReservation(
       seatKeys.length,
       ...seatKeys,
       userId,
@@ -37,7 +37,7 @@ export class RedisService implements OnModuleDestroy {
   }
 
   async setNx(key: string, value: string): Promise<boolean> {
-    const result = await this.ticketClient.setnx(key, value);
+    const result = await this.coreClient.setnx(key, value);
     return result === 1;
   }
 
@@ -46,33 +46,33 @@ export class RedisService implements OnModuleDestroy {
     value: string,
     ttlMs: number,
   ): Promise<boolean> {
-    const result = await this.ticketClient.set(key, value, 'PX', ttlMs, 'NX');
+    const result = await this.coreClient.set(key, value, 'PX', ttlMs, 'NX');
     return result === 'OK';
   }
 
   async msetnx(kv: Record<string, string>): Promise<boolean> {
-    const result = await this.ticketClient.msetnx(...Object.entries(kv).flat());
+    const result = await this.coreClient.msetnx(...Object.entries(kv).flat());
     return Number(result) === 1;
   }
 
   async set(key: string, value: string): Promise<string> {
-    return this.ticketClient.set(key, value);
+    return this.coreClient.set(key, value);
   }
 
   async get(key: string): Promise<string | null> {
-    return this.ticketClient.get(key);
+    return this.coreClient.get(key);
   }
 
   async hget(key: string, field: string): Promise<string | null> {
-    return this.ticketClient.hget(key, field);
+    return this.coreClient.hget(key, field);
   }
 
   async hset(key: string, field: string, value: string): Promise<number> {
-    return this.ticketClient.hset(key, field, value);
+    return this.coreClient.hset(key, field, value);
   }
 
   async hsetnx(key: string, field: string, value: string): Promise<number> {
-    return this.ticketClient.hsetnx(key, field, value);
+    return this.coreClient.hsetnx(key, field, value);
   }
 
   async getQueue(key: string): Promise<string | null> {
@@ -85,32 +85,32 @@ export class RedisService implements OnModuleDestroy {
 
   async mget(keys: string[]): Promise<(string | null)[]> {
     if (keys.length === 0) return [];
-    return this.ticketClient.mget(...keys);
+    return this.coreClient.mget(...keys);
   }
 
   async del(key: string): Promise<number> {
-    return this.ticketClient.del(key);
+    return this.coreClient.del(key);
   }
 
   async sadd(key: string, ...members: string[]): Promise<number> {
-    return this.ticketClient.sadd(key, ...members);
+    return this.coreClient.sadd(key, ...members);
   }
 
   async srandmember(key: string): Promise<string | null> {
-    return this.ticketClient.srandmember(key);
+    return this.coreClient.srandmember(key);
   }
 
   async incr(key: string): Promise<number> {
-    return this.ticketClient.incr(key);
+    return this.coreClient.incr(key);
   }
 
   async sismember(key: string, member: string): Promise<boolean> {
-    const result = await this.ticketClient.sismember(key, member);
+    const result = await this.coreClient.sismember(key, member);
     return result === 1;
   }
 
   async flushAll(): Promise<string> {
-    return this.ticketClient.flushall();
+    return this.coreClient.flushall();
   }
 
   async flushAllQueue(): Promise<string> {
@@ -118,7 +118,7 @@ export class RedisService implements OnModuleDestroy {
   }
 
   async deleteAllExceptPrefix(prefix: string): Promise<number> {
-    return this.deleteAllExceptPrefixWithClient(this.ticketClient, prefix);
+    return this.deleteAllExceptPrefixWithClient(this.coreClient, prefix);
   }
 
   async deleteAllExceptPrefixQueue(prefix: string): Promise<number> {
@@ -129,12 +129,12 @@ export class RedisService implements OnModuleDestroy {
     return this.queueClient.publish(channel, message);
   }
 
-  async publishToTicket(channel: string, message: string): Promise<number> {
-    return this.ticketClient.publish(channel, message);
+  async publishToCore(channel: string, message: string): Promise<number> {
+    return this.coreClient.publish(channel, message);
   }
 
   pipeline(): ChainableCommander {
-    return this.ticketClient.pipeline();
+    return this.coreClient.pipeline();
   }
 
   async brpopQueueList(

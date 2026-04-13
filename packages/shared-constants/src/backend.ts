@@ -2,8 +2,8 @@
 export const PROVIDERS = {
   // 대기열 Redis 클라이언트
   REDIS_QUEUE: "REDIS_QUEUE_CLIENT",
-  // 티켓 예매 Redis 클라이언트
-  REDIS_TICKET: "REDIS_TICKET_CLIENT",
+  // Core VM Redis 클라이언트
+  REDIS_CORE: "REDIS_CORE_CLIENT",
 };
 
 // Redis Key 패턴
@@ -41,7 +41,7 @@ export const CONFIG_PATHS = {
   REDIS_QUEUE_HOST: "redis.queue.host",
   REDIS_QUEUE_PORT: "redis.queue.port",
   REDIS_QUEUE_PASSWORD: "redis.queue.password",
-  REDIS_TICKET_HOST: "redis.ticket.host",
-  REDIS_TICKET_PORT: "redis.ticket.port",
-  REDIS_TICKET_PASSWORD: "redis.ticket.password",
+  REDIS_CORE_HOST: "redis.core.host",
+  REDIS_CORE_PORT: "redis.core.port",
+  REDIS_CORE_PASSWORD: "redis.core.password",
 };

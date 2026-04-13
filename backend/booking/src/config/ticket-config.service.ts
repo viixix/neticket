@@ -10,11 +10,11 @@ export class TicketConfigService implements OnModuleInit {
   private readonly queueManager: DynamicConfigManager;
 
   constructor(
-    @Inject(PROVIDERS.REDIS_TICKET) private readonly ticketRedis: Redis,
+    @Inject(PROVIDERS.REDIS_CORE) private readonly coreRedis: Redis,
     @Inject(PROVIDERS.REDIS_QUEUE) private readonly queueRedis: Redis,
   ) {
     this.ticketManager = new DynamicConfigManager(
-      this.ticketRedis,
+      this.coreRedis,
       REDIS_KEYS.CONFIG_TICKET,
     );
     this.queueManager = new DynamicConfigManager(
@@ -86,7 +86,7 @@ export class TicketConfigService implements OnModuleInit {
 
   private async seedTicketConfig(): Promise<void> {
     const env = process.env;
-    const pipeline = this.ticketRedis.pipeline();
+    const pipeline = this.coreRedis.pipeline();
 
     this.applySeed(pipeline, REDIS_KEYS.CONFIG_TICKET, {
       'virtual.brpop_timeout_sec': [env.TICKET_VIRTUAL_BRPOP_TIMEOUT_SEC, '2'],
