@@ -90,18 +90,18 @@ jobs:
       matrix:
         include:
           - service: show
-            host_secret: GCP_CORE_SERVER_HOST
-            user_secret: GCP_CORE_SERVER_USER
+            host_var: GCP_CORE_SERVER_HOST
+            user_var: GCP_CORE_SERVER_USER
           - service: booking
-            host_secret: GCP_CORE_SERVER_HOST
-            user_secret: GCP_CORE_SERVER_USER
+            host_var: GCP_CORE_SERVER_HOST
+            user_var: GCP_CORE_SERVER_USER
     steps:
       - name: 배포 실행
         if: contains(fromJson(needs.resolve-targets.outputs.matrix), matrix.service)
         uses: appleboy/ssh-action@v1.0.3
         with:
-          host: ${{ secrets[matrix.host_secret] }}
-          username: ${{ secrets[matrix.user_secret] }}
+          host: ${{ vars[matrix.host_var] }}
+          username: ${{ vars[matrix.user_var] }}
           key: ${{ secrets.GCP_SSH_PRIVATE_KEY }}
           envs: GCP_REGISTRY,GCP_SA_KEY,IMAGE_TAG,SERVICE_NAME,TARGET_BRANCH,REDIS_QUEUE_HOST,KOPIS_SERVICE_KEY,DB_PASSWORD,DB_USERNAME
           script: |
