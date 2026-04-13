@@ -39,10 +39,10 @@ services:
     networks:
       - queue-network
     logging:
-      driver: "json-file"
+      driver: gcplogs
       options:
-        max-size: "10m"
-        max-file: "3"
+        gcp-project: ${GCP_PROJECT_ID:-neticket-492104}
+        labels: "service=queue,env=production"
     ulimits:
       nofile:
         soft: 65535
@@ -63,30 +63,10 @@ services:
       - queue-network
     restart: unless-stopped
     logging:
-      driver: "json-file"
+      driver: gcplogs
       options:
-        max-size: "10m"
-        max-file: "3"
-
-  promtail:
-    image: grafana/promtail:3.3.0
-    container_name: promtail-queue
-    user: root
-    volumes:
-      - /var/run/docker.sock:/var/run/docker.sock
-      - ./promtail-config.yaml:/etc/promtail/config.yaml
-    command: -config.file=/etc/promtail/config.yaml -config.expand-env=true
-    env_file:
-      - .env
-    environment:
-      - LOKI_URL=${LOKI_URL}
-    networks:
-      - queue-network
-    logging:
-      driver: "json-file"
-      options:
-        max-size: "10m"
-        max-file: "3"
+        gcp-project: ${GCP_PROJECT_ID:-neticket-492104}
+        labels: "service=nginx-queue,env=production"
 
   cadvisor:
     image: gcr.io/cadvisor/cadvisor:v0.47.2
