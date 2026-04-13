@@ -11,10 +11,15 @@ export const getWinstonLogger = (
   serviceName: string,
   traceService: TraceService
 ): LoggerService => {
+  const GCP_PROJECT_ID = process.env.GCP_PROJECT_ID;
+
   const traceFormat = winston.format((info) => {
     const traceId = traceService.getTraceId();
     if (traceId) {
       info.traceId = traceId;
+      if (GCP_PROJECT_ID) {
+        info['logging.googleapis.com/trace'] = `projects/${GCP_PROJECT_ID}/traces/${traceId}`;
+      }
     }
     return info;
   });
