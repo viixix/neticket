@@ -20,12 +20,17 @@ services:
     # volumes:
     #   - ./queue-backend/redis_data:/data
   queue:
-    image: ${GCP_REGISTRY}/neticket-queue:${IMAGE_TAG:-latest}
+    image: ${GCP_REGISTRY}/queue:${IMAGE_TAG:-latest}
     container_name: queue
     ports:
       - '3003:3003'
     environment:
       - NODE_ENV=production
+      - REDIS_QUEUE_HOST=${REDIS_QUEUE_HOST:-redis}
+      - REDIS_QUEUE_PORT=${REDIS_QUEUE_PORT:-6379}
+      - REDIS_TICKET_HOST=${REDIS_TICKET_HOST}
+      - REDIS_TICKET_PORT=${REDIS_TICKET_PORT:-6380}
+      - GCP_PROJECT_ID=${GCP_PROJECT_ID:-neticket-492104}
     env_file:
       - .env
     restart: unless-stopped
@@ -43,6 +48,26 @@ services:
       nofile:
         soft: 65535
         hard: 65535
+
+  nginx:
+    image: nginx:alpine
+    container_name: nginx-queue
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx.conf:/etc/nginx/conf.d/default.conf:ro
+      - /etc/letsencrypt:/etc/letsencrypt:ro
+    depends_on:
+      - queue
+    networks:
+      - queue-network
+    restart: unless-stopped
+    logging:
+      driver: 'json-file'
+      options:
+        max-size: '10m'
+        max-file: '3'
 
   promtail:
     image: grafana/promtail:3.3.0
