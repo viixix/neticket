@@ -129,8 +129,8 @@ jobs:
             export IMAGE_TAG GCP_REGISTRY SERVICE_NAME
 
             echo "🚀 $SERVICE_NAME 배포 중 (Healthcheck 대기)..."
-            docker compose pull $SERVICE_NAME promtail cadvisor
-            docker compose up -d --wait --no-build $SERVICE_NAME nginx promtail cadvisor
+            docker compose pull $SERVICE_NAME cadvisor
+            docker compose up -d --wait --no-build $SERVICE_NAME nginx cadvisor
 
             # 6. 디스크 청소 (24시간 이내 이미지는 보존하여 롤백 대비)
             docker image prune -af --filter "until=24h"
@@ -183,8 +183,8 @@ jobs:
             export IMAGE_TAG GCP_REGISTRY SERVICE_NAME
 
             echo "🚀 $SERVICE_NAME 배포 중 (Healthcheck 대기)..."
-            docker compose pull $SERVICE_NAME promtail cadvisor
-            docker compose up -d --wait --no-build $SERVICE_NAME promtail cadvisor
+            docker compose pull $SERVICE_NAME cadvisor
+            docker compose up -d --wait --no-build $SERVICE_NAME nginx cadvisor
 
             # 6. 디스크 청소 (24시간 이내 이미지는 보존하여 롤백 대비)
             docker image prune -af --filter "until=24h"
