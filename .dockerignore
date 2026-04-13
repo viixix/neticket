@@ -28,9 +28,9 @@ pnpm-debug.log*
 
 # Keep only necessary files for frontend build
 # Exclude other services
-backend/api-server/node_modules
-backend/ticket-server/node_modules
-queue-backend/node_modules
+backend/show/node_modules
+backend/booking/node_modules
+queue/node_modules
 redis_data/
 
 node_modules/

@@ -7,15 +7,10 @@ dist
 !.env.example
 /mysql_data
 /redis_data
-backend/api-server/dist/
-/backend/api-server/node_modules
-/backend/ticket-server/node_modules
 /node_modules/.pnpm
 /packages/shared-nestjs/node_modules
 /packages/shared-constants/node_modules
 /packages/shared-types/node_modules
-/queue-backend/node_modules/.bin
-/queue-backend/node_modules
 /node_modules/.bin
 /node_modules
 PR.md
