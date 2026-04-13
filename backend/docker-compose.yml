@@ -1,9 +1,7 @@
-version: "3.8"
-
 services:
   redis:
     image: redis:7.2-alpine
-    container_name: ticket-redis
+    container_name: redis-core
     ports:
       - "6380:6379"
     networks:
@@ -61,8 +59,8 @@ services:
       - "3002:3002"
     environment:
       - NODE_ENV=production
-      - REDIS_TICKET_HOST=${REDIS_TICKET_HOST:-redis}
-      - REDIS_TICKET_PORT=${REDIS_TICKET_PORT:-6379}
+      - REDIS_CORE_HOST=${REDIS_CORE_HOST:-redis}
+      - REDIS_CORE_PORT=${REDIS_CORE_PORT:-6379}
       - REDIS_QUEUE_HOST=${REDIS_QUEUE_HOST}
       - SHOW_SERVER_URL=${SHOW_SERVER_URL:-http://show:3001}
       - DB_HOST=${DB_HOST:-host.docker.internal}
@@ -128,7 +126,7 @@ services:
 
   cadvisor:
     image: gcr.io/cadvisor/cadvisor:v0.47.2
-    container_name: cadvisor
+    container_name: cadvisor-core
     restart: unless-stopped
     ports:
       - "8080:8080"
