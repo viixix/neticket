@@ -49,7 +49,6 @@ RUN adduser --system --uid 1001 nestjs
 
 # Copy built application and dependencies
 COPY --from=builder --chown=nestjs:nodejs /app/backend/show/dist ./backend/show/dist
-COPY --from=builder --chown=nestjs:nodejs /app/backend/show/public ./backend/show/public
 COPY --from=builder --chown=nestjs:nodejs /app/backend/show/package.json ./backend/show/package.json
 COPY --from=deps --chown=nestjs:nodejs /app/node_modules ./node_modules
 COPY --from=deps --chown=nestjs:nodejs /app/backend/show/node_modules ./backend/show/node_modules
@@ -57,7 +56,7 @@ COPY --from=builder --chown=nestjs:nodejs /app/packages ./packages
 
 USER nestjs
 
-EXPOSE 3002
+EXPOSE 3001
 
 WORKDIR /app/backend/show
-CMD ["node", "dist/backend/show/src/main.js"]
+CMD ["node", "dist/main.js"]

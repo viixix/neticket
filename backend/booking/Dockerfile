@@ -56,7 +56,7 @@ COPY --from=builder --chown=nestjs:nodejs /app/packages ./packages
 
 USER nestjs
 
-EXPOSE 3001
+EXPOSE 3002
 
 WORKDIR /app/backend/booking
 CMD ["node", "dist/main.js"]
