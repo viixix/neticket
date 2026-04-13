@@ -6,9 +6,9 @@ export const redisConfig = registerAs("redis", () => ({
     port: parseInt(process.env.REDIS_QUEUE_PORT || "6379", 10),
     password: process.env.REDIS_QUEUE_PASSWORD,
   },
-  ticket: {
-    host: process.env.REDIS_TICKET_HOST || "localhost",
-    port: parseInt(process.env.REDIS_TICKET_PORT || "6380", 10),
-    password: process.env.REDIS_TICKET_PASSWORD,
+  core: {
+    host: process.env.REDIS_CORE_HOST || "localhost",
+    port: parseInt(process.env.REDIS_CORE_PORT || "6380", 10),
+    password: process.env.REDIS_CORE_PASSWORD,
   },
 }));

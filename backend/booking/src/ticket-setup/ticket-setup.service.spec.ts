@@ -46,7 +46,7 @@ describe('TicketSetupService', () => {
             del: jest.fn(),
             deleteAllExceptPrefix: jest.fn(),
             deleteAllExceptPrefixQueue: jest.fn(),
-            publishToTicket: jest.fn().mockResolvedValue(1),
+            publishToCore: jest.fn().mockResolvedValue(1),
           },
         },
       ],
@@ -124,7 +124,7 @@ describe('TicketSetupService', () => {
         expectedKey,
         expectedData,
       );
-      expect(jest.mocked(redisService.publishToTicket)).toHaveBeenCalledWith(
+      expect(jest.mocked(redisService.publishToCore)).toHaveBeenCalledWith(
         REDIS_CHANNELS.TICKETING_STATE_CHANGED,
         'setup',
       );
@@ -138,7 +138,7 @@ describe('TicketSetupService', () => {
         REDIS_KEYS.TICKETING_OPEN,
         'true',
       );
-      expect(jest.mocked(redisService.publishToTicket)).toHaveBeenCalledWith(
+      expect(jest.mocked(redisService.publishToCore)).toHaveBeenCalledWith(
         REDIS_CHANNELS.TICKETING_STATE_CHANGED,
         '{"userId":"open","traceId":"trace-id"}',
       );
@@ -166,7 +166,7 @@ describe('TicketSetupService', () => {
       expect(jest.mocked(redisService.del)).toHaveBeenCalledWith(
         REDIS_KEYS.CURRENT_TICKETING_SESSIONS,
       );
-      expect(jest.mocked(redisService.publishToTicket)).toHaveBeenCalledWith(
+      expect(jest.mocked(redisService.publishToCore)).toHaveBeenCalledWith(
         REDIS_CHANNELS.TICKETING_STATE_CHANGED,
         '{"userId":"close","traceId":"trace-id"}',
       );

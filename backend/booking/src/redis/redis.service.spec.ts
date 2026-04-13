@@ -26,7 +26,7 @@ describe('RedisService', () => {
       providers: [
         RedisService,
         {
-          provide: PROVIDERS.REDIS_TICKET,
+          provide: PROVIDERS.REDIS_CORE,
           useValue: redisClient,
         },
         {
