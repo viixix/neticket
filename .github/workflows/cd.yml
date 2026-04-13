@@ -105,6 +105,7 @@ jobs:
           key: ${{ secrets.GCP_SSH_PRIVATE_KEY }}
           envs: GCP_REGISTRY,GCP_SA_KEY,IMAGE_TAG,SERVICE_NAME,TARGET_BRANCH,REDIS_QUEUE_HOST,KOPIS_SERVICE_KEY,DB_PASSWORD,DB_USERNAME
           script: |
+            git config --global --add safe.directory /app/neticket
             cd /app/neticket
 
             # 1. 최신 코드 동기화
@@ -160,6 +161,7 @@ jobs:
           key: ${{ secrets.GCP_SSH_PRIVATE_KEY }}
           envs: GCP_REGISTRY,GCP_SA_KEY,IMAGE_TAG,SERVICE_NAME,TARGET_BRANCH,REDIS_CORE_HOST
           script: |
+            git config --global --add safe.directory /app/neticket
             cd /app/neticket
 
             # 1. 최신 코드 동기화
@@ -171,8 +173,8 @@ jobs:
 
             # 3. 환경 변수 주입 (cross-VM 연결)
             if [ ! -f .env ]; then touch .env; fi
-            sed -i '/^REDIS_TICKET_HOST=/d' .env
-            echo "REDIS_TICKET_HOST=$REDIS_CORE_HOST" >> .env
+            sed -i '/^REDIS_CORE_HOST=/d' .env
+            echo "REDIS_CORE_HOST=$REDIS_CORE_HOST" >> .env
 
             # 4. GCP Artifact Registry 로그인
             echo "$GCP_SA_KEY" | docker login -u _json_key --password-stdin "https://$(echo $GCP_REGISTRY | cut -d/ -f1)"

@@ -1,15 +1,13 @@
-version: '3.8'
-
 services:
   redis:
     image: redis:7.2-alpine
-    container_name: queue-redis
+    container_name: redis-queue
     ports:
-      - '6379:6379'
+      - "6379:6379"
     networks:
       - queue-network
     healthcheck:
-      test: ['CMD', 'redis-cli', 'ping']
+      test: ["CMD", "redis-cli", "ping"]
       interval: 5s
       timeout: 3s
       retries: 5
@@ -18,18 +16,19 @@ services:
         soft: 65535
         hard: 65535
     # volumes:
-    #   - ./queue-backend/redis_data:/data
+    #   - ./redis_data:/data
+
   queue:
     image: ${GCP_REGISTRY}/queue:${IMAGE_TAG:-latest}
     container_name: queue
     ports:
-      - '3003:3003'
+      - "3003:3003"
     environment:
       - NODE_ENV=production
       - REDIS_QUEUE_HOST=${REDIS_QUEUE_HOST:-redis}
       - REDIS_QUEUE_PORT=${REDIS_QUEUE_PORT:-6379}
-      - REDIS_TICKET_HOST=${REDIS_TICKET_HOST}
-      - REDIS_TICKET_PORT=${REDIS_TICKET_PORT:-6380}
+      - REDIS_CORE_HOST=${REDIS_CORE_HOST}
+      - REDIS_CORE_PORT=${REDIS_CORE_PORT:-6380}
       - GCP_PROJECT_ID=${GCP_PROJECT_ID:-neticket-492104}
     env_file:
       - .env
@@ -40,10 +39,10 @@ services:
     networks:
       - queue-network
     logging:
-      driver: 'json-file'
+      driver: "json-file"
       options:
-        max-size: '10m'
-        max-file: '3'
+        max-size: "10m"
+        max-file: "3"
     ulimits:
       nofile:
         soft: 65535
@@ -64,10 +63,10 @@ services:
       - queue-network
     restart: unless-stopped
     logging:
-      driver: 'json-file'
+      driver: "json-file"
       options:
-        max-size: '10m'
-        max-file: '3'
+        max-size: "10m"
+        max-file: "3"
 
   promtail:
     image: grafana/promtail:3.3.0
@@ -84,17 +83,17 @@ services:
     networks:
       - queue-network
     logging:
-      driver: 'json-file'
+      driver: "json-file"
       options:
-        max-size: '10m'
-        max-file: '3'
+        max-size: "10m"
+        max-file: "3"
 
   cadvisor:
     image: gcr.io/cadvisor/cadvisor:v0.47.2
     container_name: cadvisor-queue
     restart: unless-stopped
     ports:
-      - '8080:8080'
+      - "8080:8080"
     volumes:
       - /:/rootfs:ro
       - /var/run:/var/run:ro
