@@ -12,7 +12,7 @@ on:
           - queue
           - booking
           - show
-          - backend
+          - core
           - all
       branch:
         description: "배포할 브랜치"
@@ -34,7 +34,7 @@ jobs:
           SERVICES="${{ github.event.inputs.services }}"
           if [ "$SERVICES" = "all" ]; then
             JSON='["show", "booking", "queue"]'
-          elif [ "$SERVICES" = "backend" ]; then
+          elif [ "$SERVICES" = "core" ]; then
             JSON='["show", "booking"]'
           else
             JSON="[\"$SERVICES\"]"
@@ -72,15 +72,15 @@ jobs:
         uses: docker/build-push-action@v5
         with:
           context: .
-          file: ${{ matrix.service == 'queue' && 'queue/Dockerfile' || format('backend/{0}/Dockerfile', matrix.service) }}
+          file: ${{ matrix.service == 'queue' && 'queue/Dockerfile' || format('core/{0}/Dockerfile', matrix.service) }}
           push: true
           tags: ${{ vars.GCP_REGISTRY }}/${{ matrix.service }}:${{ github.sha }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
-  # 3a: 백엔드 호스트(show + booking) — 동일 호스트·동일 compose이므로 직렬
-  deploy-backend:
-    name: Deploy (backend) - ${{ matrix.service }}
+  # 3a: core 호스트(show + booking) — 동일 호스트·동일 compose이므로 직렬
+  deploy-core:
+    name: Deploy (core) - ${{ matrix.service }}
     needs: [resolve-targets, build-and-push]
     if: needs.resolve-targets.outputs.has_targets == 'true' && (contains(needs.resolve-targets.outputs.matrix, 'show') || contains(needs.resolve-targets.outputs.matrix, 'booking'))
     runs-on: ubuntu-latest
@@ -113,7 +113,7 @@ jobs:
             git reset --hard origin/$TARGET_BRANCH
 
             # 2. 서비스 위치로 이동
-            [ "$SERVICE_NAME" == "queue" ] && cd queue || cd backend
+            [ "$SERVICE_NAME" == "queue" ] && cd queue || cd core
 
             # 3. 환경 변수 주입 (cross-VM 연결 및 시크릿)
             if [ ! -f .env ]; then touch .env; fi
@@ -147,7 +147,7 @@ jobs:
           DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
           DB_USERNAME: ${{ secrets.DB_USERNAME }}
 
-  # 3b: 큐 호스트 — 백엔드 deploy-backend와 서로 needs 없음 → all 선택 시 병렬 실행
+  # 3b: 큐 호스트 — deploy-core와 서로 needs 없음 → all 선택 시 병렬 실행
   deploy-queue:
     name: Deploy (queue) - queue
     needs: [resolve-targets, build-and-push]
@@ -202,7 +202,7 @@ jobs:
   # 4단계: 결과 요약
   deployment-summary:
     name: Deployment Summary
-    needs: [resolve-targets, deploy-backend, deploy-queue]
+    needs: [resolve-targets, deploy-core, deploy-queue]
     if: always() && needs.resolve-targets.result == 'success'
     runs-on: ubuntu-latest
     steps:

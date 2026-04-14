@@ -12,7 +12,7 @@ jobs:
     runs-on: ubuntu-latest
     outputs:
       has_changes: ${{ steps.detect.outputs.has_changes }}
-      backend_matrix: ${{ steps.filter.outputs.matrix }}
+      core_matrix: ${{ steps.filter.outputs.matrix }}
       frontend_changed: ${{ steps.detect.outputs.frontend_changed }}
       changed_services: ${{ steps.detect.outputs.changed_services }}
     steps:
@@ -28,23 +28,23 @@ jobs:
           BASE="${{ github.base_ref || github.ref_name }}"
           .github/scripts/detect-changes.sh "origin/$BASE"
 
-      - name: 🧪 Filter Backend Matrix
+      - name: 🧪 Filter Core Matrix
         id: filter
         run: |
           # 감지된 전체 서비스 목록 가져오기
           SERVICES='${{ steps.detect.outputs.changed_services }}'
 
-          # 백엔드만 솎아내기 (sed)
-          BACKEND=$(echo $SERVICES | sed 's/"frontend",//g; s/,"frontend"//g; s/\["frontend"\]/[]/g')
+          # frontend 제외한 core 서비스만 솎아내기 (sed)
+          CORE=$(echo $SERVICES | sed 's/"frontend",//g; s/,"frontend"//g; s/\["frontend"\]/[]/g')
 
-          echo "matrix=$BACKEND" >> $GITHUB_OUTPUT
+          echo "matrix=$CORE" >> $GITHUB_OUTPUT
 
       - name: 📢 Detection Result Summary
         run: |
           echo "### 🔍 Detection Result" >> $GITHUB_STEP_SUMMARY
           echo "- **Has Changes:** ${{ steps.detect.outputs.has_changes }}" >> $GITHUB_STEP_SUMMARY
           echo "- **Frontend Changed:** ${{ steps.detect.outputs.frontend_changed }}" >> $GITHUB_STEP_SUMMARY
-          echo "- **Backend Matrix:** \`${{ steps.filter.outputs.matrix }}\`" >> $GITHUB_STEP_SUMMARY
+          echo "- **Core Matrix:** \`${{ steps.filter.outputs.matrix }}\`" >> $GITHUB_STEP_SUMMARY
 
   # Frontend CI
   ci-frontend:
@@ -91,15 +91,15 @@ jobs:
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
-  ci-backend:
-    name: ⚙️ CI - Backend
+  ci-core:
+    name: ⚙️ CI - Core
     needs: detect-changes
-    if: needs.detect-changes.outputs.has_changes == 'true' && needs.detect-changes.outputs.backend_matrix != '[]'
+    if: needs.detect-changes.outputs.has_changes == 'true' && needs.detect-changes.outputs.core_matrix != '[]'
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
       matrix:
-        service: ${{ fromJson(needs.detect-changes.outputs.backend_matrix) }}
+        service: ${{ fromJson(needs.detect-changes.outputs.core_matrix) }}
     steps:
       - name: ⬇️ Checkout code
         uses: actions/checkout@v4
@@ -131,21 +131,21 @@ jobs:
         uses: docker/build-push-action@v5
         with:
           context: .
-          file: ${{ matrix.service == 'queue' && 'queue/Dockerfile' || format('backend/{0}/Dockerfile', matrix.service) }}
+          file: ${{ matrix.service == 'queue' && 'queue/Dockerfile' || format('core/{0}/Dockerfile', matrix.service) }}
           push: false
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
   ci-summary:
     name: 📊 CI Result Summary
-    needs: [detect-changes, ci-frontend, ci-backend]
+    needs: [detect-changes, ci-frontend, ci-core]
     if: always()
     runs-on: ubuntu-latest
     steps:
       - name: 🏁 Final Status Check
         run: |
           F_ST="${{ needs.ci-frontend.result }}"
-          B_ST="${{ needs.ci-backend.result }}"
+          B_ST="${{ needs.ci-core.result }}"
           if [[ "$F_ST" == "failure" || "$B_ST" == "failure" ]]; then
             echo "❌ CI Failed: Please check your code"
             exit 1
