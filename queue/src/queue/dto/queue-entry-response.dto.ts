@@ -1,4 +1,4 @@
-import { QueueEntryResponse } from '@neticket/shared-types';
+import { QueueEntryResponse } from '@neticket/contracts';
 import { ApiProperty } from '@nestjs/swagger';
 
 export class QueueEntryResponseDto implements QueueEntryResponse {

@@ -1,8 +1,8 @@
 import { Injectable, OnModuleInit, Inject, Logger } from '@nestjs/common';
 import { ChainableCommander, Redis } from 'ioredis';
-import { DynamicConfigManager } from '@neticket/shared-nestjs';
-import { PROVIDERS, REDIS_KEYS } from '@neticket/shared-constants';
-import { QUEUE_ERROR_CODES } from '@neticket/shared-nestjs';
+import { DynamicConfigManager } from '@neticket/common';
+import { PROVIDERS, REDIS_KEYS } from '@neticket/contracts';
+import { QUEUE_ERROR_CODES } from '@neticket/common';
 import { createQueueErrorHandler } from './utils/queue-error.util';
 
 @Injectable()

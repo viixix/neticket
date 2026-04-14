@@ -1,4 +1,4 @@
-import { PROVIDERS, REDIS_CHANNELS } from '@neticket/shared-constants';
+import { PROVIDERS, REDIS_CHANNELS } from '@neticket/contracts';
 import {
   Inject,
   Injectable,
@@ -13,7 +13,7 @@ import {
   QUEUE_ERROR_CODES,
   runWithPubSubContext,
   TraceService,
-} from '@neticket/shared-nestjs';
+} from '@neticket/common';
 import { createQueueErrorHandler } from './utils/queue-error.util';
 
 @Injectable()

@@ -1,10 +1,6 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { QueueWorker } from './queue.worker';
-import {
-  PROVIDERS,
-  REDIS_KEY_PREFIXES,
-  REDIS_KEYS,
-} from '@neticket/shared-constants';
+import { PROVIDERS, REDIS_KEY_PREFIXES, REDIS_KEYS } from '@neticket/contracts';
 import { Logger } from '@nestjs/common';
 import { QueueConfigService } from './queue-config.service';
 

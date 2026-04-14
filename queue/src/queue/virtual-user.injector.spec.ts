@@ -1,9 +1,9 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { PROVIDERS, REDIS_KEYS } from '@neticket/shared-constants';
+import { PROVIDERS, REDIS_KEYS } from '@neticket/contracts';
 import { VirtualUserInjector } from './virtual-user.injector';
 import { QueueConfigService } from './queue-config.service';
 import { TicketingStateService } from './ticketing-state.service';
-import { TraceService } from '@neticket/shared-nestjs';
+import { TraceService } from '@neticket/common';
 
 describe('VirtualUserInjector', () => {
   let injector: VirtualUserInjector;

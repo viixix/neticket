@@ -1,6 +1,6 @@
 import { Global, Module } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import { PROVIDERS, CONFIG_PATHS } from '@neticket/shared-constants';
+import { PROVIDERS, CONFIG_PATHS } from '@neticket/contracts';
 import { Redis } from 'ioredis';
 import { REDIS_COMMANDS } from './redis.commands';
 

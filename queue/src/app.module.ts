@@ -8,7 +8,7 @@ import {
   redisConfig,
   TraceMiddleware,
   TraceModule,
-} from '@neticket/shared-nestjs';
+} from '@neticket/common';
 
 @Module({
   imports: [

@@ -1,5 +1,5 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { PROVIDERS, REDIS_KEYS } from '@neticket/shared-constants';
+import { PROVIDERS, REDIS_KEYS } from '@neticket/contracts';
 import { QueueService } from './queue.service';
 import crypto from 'crypto';
 import { JwtService } from '@nestjs/jwt';
@@ -7,7 +7,7 @@ import { HeartbeatService } from './heartbeat.service';
 import { VirtualUserInjector } from './virtual-user.injector';
 import { QueueConfigService } from './queue-config.service';
 import { TicketingStateService } from './ticketing-state.service';
-import { QueueException } from '@neticket/shared-nestjs';
+import { QueueException } from '@neticket/common';
 
 describe('QueueService', () => {
   let service: QueueService;

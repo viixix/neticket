@@ -1,5 +1,5 @@
 import { Logger } from '@nestjs/common';
-import { QUEUE_ERROR_CODES, QueueException } from '@neticket/shared-nestjs';
+import { QUEUE_ERROR_CODES, QueueException } from '@neticket/common';
 import { createQueueErrorHandler } from './queue-error.util';
 
 describe('createQueueErrorHandler', () => {

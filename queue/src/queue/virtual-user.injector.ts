@@ -1,10 +1,10 @@
 import { Inject, Injectable, Logger } from '@nestjs/common';
-import { PROVIDERS, REDIS_KEYS } from '@neticket/shared-constants';
+import { PROVIDERS, REDIS_KEYS } from '@neticket/contracts';
 import { randomBytes } from 'crypto';
 import Redis from 'ioredis';
 import { QueueConfigService } from './queue-config.service';
 import { TicketingStateService } from './ticketing-state.service';
-import { QUEUE_ERROR_CODES, TraceService } from '@neticket/shared-nestjs';
+import { QUEUE_ERROR_CODES, TraceService } from '@neticket/common';
 import { createQueueErrorHandler } from './utils/queue-error.util';
 
 @Injectable()
