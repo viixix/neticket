@@ -27,15 +27,15 @@ services:
     command: redis-server --appendonly yes
     networks:
       - ticketing_training_net
-  backend:
+  core:
     build:
-      context: ./backend
-    container_name: ticketing_training_be
-    working_dir: /usr/src/app/backend
+      context: ./core
+    container_name: ticketing_training_core
+    working_dir: /usr/src/app/core
     command: sh -c "npm install && npm run start:dev"
     volumes:
-      - ./backend:/usr/src/app/backend
-      - /usr/src/app/backend/node_modules
+      - ./core:/usr/src/app/core
+      - /usr/src/app/core/node_modules
     ports:
       - "3000:3000"
     environment:
@@ -67,7 +67,7 @@ services:
     environment: []
     ## 추후 필요한 환경변수 추가
     depends_on:
-      - backend
+      - core
     networks:
       - ticketing_training_net
 networks:

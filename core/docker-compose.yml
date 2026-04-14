@@ -1,0 +1,125 @@
+services:
+  redis:
+    image: redis:7.2-alpine
+    container_name: redis-core
+    ports:
+      - "6380:6379"
+    networks:
+      - core-network
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+    ulimits:
+      nofile:
+        soft: 65535
+        hard: 65535
+    # volumes:
+    #   - ./redis_data:/data
+
+  show:
+    image: ${GCP_REGISTRY}/show:${IMAGE_TAG:-latest}
+    container_name: show
+    build:
+      context: ..
+      dockerfile: core/show/Dockerfile
+    ports:
+      - "3001:3001"
+    environment:
+      - NODE_ENV=production
+      - DB_HOST=${DB_HOST:-host.docker.internal}
+      - GCP_PROJECT_ID=${GCP_PROJECT_ID:-neticket-492104}
+    env_file:
+      - .env
+    restart: unless-stopped
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    depends_on:
+      redis:
+        condition: service_healthy
+    networks:
+      - core-network
+    logging:
+      driver: gcplogs
+      options:
+        gcp-project: ${GCP_PROJECT_ID:-neticket-492104}
+        labels: "service=show,env=production"
+    ulimits:
+      nofile:
+        soft: 65535
+        hard: 65535
+
+  booking:
+    image: ${GCP_REGISTRY}/booking:${IMAGE_TAG:-latest}
+    container_name: booking
+    build:
+      context: ..
+      dockerfile: core/booking/Dockerfile
+    ports:
+      - "3002:3002"
+    environment:
+      - NODE_ENV=production
+      - REDIS_CORE_HOST=${REDIS_CORE_HOST:-redis}
+      - REDIS_CORE_PORT=${REDIS_CORE_PORT:-6379}
+      - REDIS_QUEUE_HOST=${REDIS_QUEUE_HOST}
+      - SHOW_SERVER_URL=${SHOW_SERVER_URL:-http://show:3001}
+      - DB_HOST=${DB_HOST:-host.docker.internal}
+      - GCP_PROJECT_ID=${GCP_PROJECT_ID:-neticket-492104}
+    env_file:
+      - .env
+    restart: unless-stopped
+    depends_on:
+      redis:
+        condition: service_healthy
+    networks:
+      - core-network
+    logging:
+      driver: gcplogs
+      options:
+        gcp-project: ${GCP_PROJECT_ID:-neticket-492104}
+        labels: "service=booking,env=production"
+    ulimits:
+      nofile:
+        soft: 65535
+        hard: 65535
+
+  nginx:
+    image: nginx:alpine
+    container_name: nginx-core
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx.conf:/etc/nginx/conf.d/default.conf:ro
+      - /etc/letsencrypt:/etc/letsencrypt:ro
+    depends_on:
+      - show
+      - booking
+    networks:
+      - core-network
+    restart: unless-stopped
+    logging:
+      driver: gcplogs
+      options:
+        gcp-project: ${GCP_PROJECT_ID:-neticket-492104}
+        labels: "service=nginx-core,env=production"
+
+  cadvisor:
+    image: gcr.io/cadvisor/cadvisor:v0.47.2
+    container_name: cadvisor-core
+    restart: unless-stopped
+    ports:
+      - "8080:8080"
+    volumes:
+      - /:/rootfs:ro
+      - /var/run:/var/run:ro
+      - /sys:/sys:ro
+      - /var/lib/docker/:/var/lib/docker:ro
+      - /dev/disk/:/dev/disk:ro
+    networks:
+      - core-network
+
+networks:
+  core-network:
+    driver: bridge
