@@ -1,4 +1,4 @@
-name: CD - Manual Deploy (Optimized)
+name: CD - Manual Deploy
 
 on:
   workflow_dispatch:
