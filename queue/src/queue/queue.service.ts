@@ -153,7 +153,15 @@ export class QueueService {
   }
 
   private generateAccessToken = async (userId: string) => {
-    return this.jwtService.signAsync({ sub: userId, type: 'TICKETING' });
+    const sessionIdStrs = await this.redis.smembers(
+      REDIS_KEYS.CURRENT_TICKETING_SESSIONS,
+    );
+    const sessionIds = sessionIdStrs.map(Number);
+    return this.jwtService.signAsync({
+      sub: userId,
+      type: 'TICKETING',
+      sessionIds,
+    });
   };
 
   private updateHeartbeat = async (userId: string) =>

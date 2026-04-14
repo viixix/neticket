@@ -27,12 +27,14 @@ export class RedisService implements OnModuleDestroy {
     seatKeys: string[],
     userId: string,
     rankKey: string,
+    userReservedKey: string,
   ): Promise<[number, number]> {
     return this.coreClient.atomicReservation(
       seatKeys.length,
       ...seatKeys,
       userId,
       rankKey,
+      userReservedKey,
     );
   }
 
@@ -57,6 +59,14 @@ export class RedisService implements OnModuleDestroy {
 
   async set(key: string, value: string): Promise<string> {
     return this.coreClient.set(key, value);
+  }
+
+  async setWithTtl(
+    key: string,
+    value: string,
+    ttlSec: number,
+  ): Promise<string> {
+    return this.coreClient.set(key, value, 'EX', ttlSec);
   }
 
   async get(key: string): Promise<string | null> {

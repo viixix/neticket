@@ -179,6 +179,7 @@ describe('ReservationService', () => {
         ['reservation:session:1:block:10:row:0:col:0'],
         userId,
         'rank:session:1',
+        'reserved:session:1:user:user-1',
       );
     });
 
@@ -212,6 +213,7 @@ describe('ReservationService', () => {
         ],
         userId,
         'rank:session:1',
+        'reserved:session:1:user:user-1',
       );
     });
   });

@@ -5,6 +5,7 @@
 export interface JwtPayload {
   sub: string; // userId
   type: string; // 'TICKETING'
+  sessionIds: number[]; // 토큰 발급 시점의 유효 회차 ID 목록
   iat?: number; // issued at
   exp?: number; // expires at
 }
@@ -15,4 +16,5 @@ export interface JwtPayload {
 export interface ActiveUser {
   userId: string;
   type: string;
+  sessionIds: number[];
 }

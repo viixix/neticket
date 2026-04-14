@@ -1,5 +1,9 @@
 import { Injectable, Logger } from '@nestjs/common';
-import { REDIS_CHANNELS, REDIS_KEYS } from '@neticket/contracts';
+import {
+  REDIS_CHANNELS,
+  REDIS_KEY_PREFIXES,
+  REDIS_KEYS,
+} from '@neticket/contracts';
 import {
   TICKET_ERROR_CODES,
   TicketException,
@@ -36,15 +40,26 @@ export class ReservationService {
     dto: CreateReservationRequestDto,
     userId: string,
     isVirtual: boolean = false,
+    sessionIds?: number[],
   ): Promise<CreateReservationResponseDto> {
     const { session_id: sessionId, seats } = dto;
     await this.validateTicketingOpen();
 
+    if (sessionIds !== undefined && !sessionIds.includes(sessionId)) {
+      throw new TicketException(
+        TICKET_ERROR_CODES.INVALID_SESSION_TOKEN,
+        '토큰에 포함된 회차 정보와 요청 회차가 일치하지 않습니다.',
+        403,
+      );
+    }
+
     const seatKeys = await this.prepareReservationKeys(sessionId, seats);
+    const userReservedKey = `${REDIS_KEY_PREFIXES.USER_RESERVED}${sessionId}:user:${userId}`;
     const rank = await this.executeAtomicReservation(
       seatKeys,
       sessionId,
       userId,
+      userReservedKey,
       isVirtual,
     );
     await this.publishReservationDoneEvent(userId, isVirtual);
@@ -81,7 +96,7 @@ export class ReservationService {
     try {
       const traceId = this.traceService.getOrCreateTraceId();
 
-      const payload = JSON.stringify({ userId, traceId });
+      const payload = JSON.stringify({ userId, traceId, isVirtual });
       await this.redisService.publishToQueue(
         REDIS_CHANNELS.QUEUE_EVENT_DONE,
         payload,
@@ -152,6 +167,7 @@ export class ReservationService {
     seatKeys: string[],
     sessionId: number,
     userId: string,
+    userReservedKey: string,
     isVirtual: boolean = false,
   ): Promise<number> {
     const rankKey = `rank:session:${sessionId}`;
@@ -159,7 +175,16 @@ export class ReservationService {
       seatKeys,
       userId,
       rankKey,
+      userReservedKey,
     );
+
+    if (success === -1) {
+      throw new TicketException(
+        TICKET_ERROR_CODES.DUPLICATE_RESERVATION,
+        '이미 예약한 사용자입니다.',
+        409,
+      );
+    }
 
     if (success !== 1) {
       throw new TicketException(
