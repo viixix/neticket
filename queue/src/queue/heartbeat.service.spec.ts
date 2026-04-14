@@ -1,5 +1,5 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { PROVIDERS, REDIS_KEYS } from '@neticket/shared-constants';
+import { PROVIDERS, REDIS_KEYS } from '@neticket/contracts';
 import { HeartbeatService } from './heartbeat.service';
 import { QueueConfigService } from './queue-config.service';
 

@@ -25,9 +25,8 @@
     "preinstall": "npx only-allow pnpm"
   },
   "dependencies": {
-    "@neticket/shared-nestjs": "workspace:*",
-    "@neticket/shared-constants": "workspace:*",
-    "@neticket/shared-types": "workspace:*",
+    "@neticket/common": "workspace:*",
+    "@neticket/contracts": "workspace:*",
     "@nestjs/common": "^11.0.1",
     "@nestjs/config": "^4.0.2",
     "@nestjs/core": "^11.0.1",
@@ -90,9 +89,8 @@
     "coverageDirectory": "../coverage",
     "testEnvironment": "node",
     "moduleNameMapper": {
-      "^@neticket/shared-constants$": "<rootDir>/../../packages/shared-constants/src",
-      "^@neticket/shared-types$": "<rootDir>/../../packages/shared-types/src",
-      "^@neticket/shared-nestjs$": "<rootDir>/../../packages/shared-nestjs/src"
+      "^@neticket/contracts$": "<rootDir>/../../packages/contracts/src",
+      "^@neticket/common$": "<rootDir>/../../packages/common/src"
     }
   }
 }

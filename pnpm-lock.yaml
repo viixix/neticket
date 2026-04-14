@@ -30,7 +30,7 @@ importers:
         specifier: ^1.4.0
         version: 1.4.0
 
-  backend/booking:
+  core/booking:
     dependencies:
       '@nestjs/axios':
         specifier: ^4.0.1
@@ -59,15 +59,12 @@ importers:
       '@nestjs/swagger':
         specifier: ^11.2.4
         version: 11.2.5(@nestjs/common@11.1.12(class-transformer@0.5.1)(class-validator@0.14.3)(reflect-metadata@0.2.2)(rxjs@7.8.2))(@nestjs/core@11.1.12)(class-transformer@0.5.1)(class-validator@0.14.3)(reflect-metadata@0.2.2)
-      '@neticket/shared-constants':
+      '@neticket/common':
         specifier: workspace:*
-        version: link:../../packages/shared-constants
-      '@neticket/shared-nestjs':
+        version: link:../../packages/common
+      '@neticket/contracts':
         specifier: workspace:*
-        version: link:../../packages/shared-nestjs
-      '@neticket/shared-types':
-        specifier: workspace:*
-        version: link:../../packages/shared-types
+        version: link:../../packages/contracts
       axios:
         specifier: ^1.13.2
         version: 1.13.4
@@ -193,7 +190,7 @@ importers:
         specifier: ^8.20.0
         version: 8.54.0(eslint@9.39.2(jiti@2.6.1))(typescript@5.9.3)
 
-  backend/show:
+  core/show:
     dependencies:
       '@nestjs/axios':
         specifier: ^4.0.1
@@ -222,12 +219,12 @@ importers:
       '@nestjs/typeorm':
         specifier: ^11.0.0
         version: 11.0.0(@nestjs/common@11.1.12(class-transformer@0.5.1)(class-validator@0.14.3)(reflect-metadata@0.2.2)(rxjs@7.8.2))(@nestjs/core@11.1.12)(reflect-metadata@0.2.2)(rxjs@7.8.2)(typeorm@0.3.28(ioredis@5.9.2)(mysql2@3.16.2)(sqlite3@5.1.7)(ts-node@10.9.2(@types/node@22.19.7)(typescript@5.9.3)))
-      '@neticket/shared-nestjs':
+      '@neticket/common':
         specifier: workspace:*
-        version: link:../../packages/shared-nestjs
-      '@neticket/shared-types':
+        version: link:../../packages/common
+      '@neticket/contracts':
         specifier: workspace:*
-        version: link:../../packages/shared-types
+        version: link:../../packages/contracts
       axios:
         specifier: ^1.13.2
         version: 1.13.4
@@ -438,13 +435,7 @@ importers:
         specifier: ^5
         version: 5.9.3
 
-  packages/shared-constants:
-    devDependencies:
-      typescript:
-        specifier: ^5.0.0
-        version: 5.9.3
-
-  packages/shared-nestjs:
+  packages/common:
     dependencies:
       ioredis:
         specifier: ^5.9.2
@@ -469,7 +460,7 @@ importers:
         specifier: ^5.0.0
         version: 5.9.3
 
-  packages/shared-types:
+  packages/contracts:
     devDependencies:
       typescript:
         specifier: ^5.0.0
@@ -501,15 +492,12 @@ importers:
       '@nestjs/typeorm':
         specifier: ^11.0.0
         version: 11.0.0(@nestjs/common@11.1.12(class-transformer@0.5.1)(class-validator@0.14.3)(reflect-metadata@0.2.2)(rxjs@7.8.2))(@nestjs/core@11.1.12)(reflect-metadata@0.2.2)(rxjs@7.8.2)(typeorm@0.3.28(ioredis@5.9.2)(mysql2@3.16.2)(sqlite3@5.1.7)(ts-node@10.9.2(@types/node@22.19.7)(typescript@5.9.3)))
-      '@neticket/shared-constants':
+      '@neticket/common':
         specifier: workspace:*
-        version: link:../packages/shared-constants
-      '@neticket/shared-nestjs':
+        version: link:../packages/common
+      '@neticket/contracts':
         specifier: workspace:*
-        version: link:../packages/shared-nestjs
-      '@neticket/shared-types':
-        specifier: workspace:*
-        version: link:../packages/shared-types
+        version: link:../packages/contracts
       cookie-parser:
         specifier: ^1.4.7
         version: 1.4.7
@@ -8436,7 +8424,7 @@ snapshots:
       eslint: 9.39.2(jiti@2.6.1)
       eslint-import-resolver-node: 0.3.9
       eslint-import-resolver-typescript: 3.10.1(eslint-plugin-import@2.32.0(eslint@9.39.2(jiti@2.6.1)))(eslint@9.39.2(jiti@2.6.1))
-      eslint-plugin-import: 2.32.0(eslint-import-resolver-typescript@3.10.1)(eslint@9.39.2(jiti@2.6.1))
+      eslint-plugin-import: 2.32.0(eslint-import-resolver-typescript@3.10.1(eslint-plugin-import@2.32.0(eslint@9.39.2(jiti@2.6.1)))(eslint@9.39.2(jiti@2.6.1)))(eslint@9.39.2(jiti@2.6.1))
       eslint-plugin-jsx-a11y: 6.10.2(eslint@9.39.2(jiti@2.6.1))
       eslint-plugin-react: 7.37.5(eslint@9.39.2(jiti@2.6.1))
       eslint-plugin-react-hooks: 7.0.1(eslint@9.39.2(jiti@2.6.1))
@@ -8473,7 +8461,7 @@ snapshots:
       tinyglobby: 0.2.15
       unrs-resolver: 1.11.1
     optionalDependencies:
-      eslint-plugin-import: 2.32.0(eslint-import-resolver-typescript@3.10.1)(eslint@9.39.2(jiti@2.6.1))
+      eslint-plugin-import: 2.32.0(eslint-import-resolver-typescript@3.10.1(eslint-plugin-import@2.32.0(eslint@9.39.2(jiti@2.6.1)))(eslint@9.39.2(jiti@2.6.1)))(eslint@9.39.2(jiti@2.6.1))
     transitivePeerDependencies:
       - supports-color
 
@@ -8487,7 +8475,7 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  eslint-plugin-import@2.32.0(eslint-import-resolver-typescript@3.10.1)(eslint@9.39.2(jiti@2.6.1)):
+  eslint-plugin-import@2.32.0(eslint-import-resolver-typescript@3.10.1(eslint-plugin-import@2.32.0(eslint@9.39.2(jiti@2.6.1)))(eslint@9.39.2(jiti@2.6.1)))(eslint@9.39.2(jiti@2.6.1)):
     dependencies:
       '@rtsao/scc': 1.1.0
       array-includes: 3.1.9
@@ -11144,7 +11132,7 @@ snapshots:
   terser@5.46.0:
     dependencies:
       '@jridgewell/source-map': 0.3.11
-      acorn: 8.15.0
+      acorn: 8.16.0
       commander: 2.20.3
       source-map-support: 0.5.21
 

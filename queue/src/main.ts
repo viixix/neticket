@@ -7,7 +7,7 @@ import {
   GlobalExceptionFilter,
   TraceMiddleware,
   TraceService,
-} from '@neticket/shared-nestjs';
+} from '@neticket/common';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule, {

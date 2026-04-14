@@ -5,13 +5,9 @@ import {
   OnModuleDestroy,
   OnModuleInit,
 } from '@nestjs/common';
-import {
-  PROVIDERS,
-  REDIS_CHANNELS,
-  REDIS_KEYS,
-} from '@neticket/shared-constants';
+import { PROVIDERS, REDIS_CHANNELS, REDIS_KEYS } from '@neticket/contracts';
 import Redis from 'ioredis';
-import { runWithPubSubContext, TraceService } from '@neticket/shared-nestjs';
+import { runWithPubSubContext, TraceService } from '@neticket/common';
 
 @Injectable()
 export class TicketingStateService implements OnModuleInit, OnModuleDestroy {

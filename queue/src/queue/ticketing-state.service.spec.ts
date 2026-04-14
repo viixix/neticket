@@ -1,11 +1,7 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import {
-  PROVIDERS,
-  REDIS_CHANNELS,
-  REDIS_KEYS,
-} from '@neticket/shared-constants';
+import { PROVIDERS, REDIS_CHANNELS, REDIS_KEYS } from '@neticket/contracts';
 import { TicketingStateService } from './ticketing-state.service';
-import { TraceService } from '@neticket/shared-nestjs';
+import { TraceService } from '@neticket/common';
 
 describe('TicketingStateService', () => {
   let service: TicketingStateService;

@@ -1,8 +1,8 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { TraceService } from '@neticket/shared-nestjs';
+import { TraceService } from '@neticket/common';
 import { QueueTrigger } from './queue.trigger';
 import { QueueWorker } from './queue.worker';
-import { PROVIDERS, REDIS_CHANNELS } from '@neticket/shared-constants';
+import { PROVIDERS, REDIS_CHANNELS } from '@neticket/contracts';
 import { QueueConfigService } from './queue-config.service';
 
 describe('QueueTrigger', () => {

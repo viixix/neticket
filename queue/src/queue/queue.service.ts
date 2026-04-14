@@ -1,21 +1,14 @@
 import { Inject, Injectable, Logger } from '@nestjs/common';
-import {
-  PROVIDERS,
-  REDIS_KEYS,
-  REDIS_KEY_PREFIXES,
-} from '@neticket/shared-constants';
+import { PROVIDERS, REDIS_KEYS, REDIS_KEY_PREFIXES } from '@neticket/contracts';
 import { Redis } from 'ioredis';
 import { randomBytes } from 'crypto';
 import { JwtService } from '@nestjs/jwt';
-import {
-  QueueEntryResponse,
-  QueueStatusResponse,
-} from '@neticket/shared-types';
+import { QueueEntryResponse, QueueStatusResponse } from '@neticket/contracts';
 import { HeartbeatService } from './heartbeat.service';
 import { VirtualUserInjector } from './virtual-user.injector';
 import { QueueConfigService } from './queue-config.service';
 import { TicketingStateService } from './ticketing-state.service';
-import { QUEUE_ERROR_CODES, QueueException } from '@neticket/shared-nestjs';
+import { QUEUE_ERROR_CODES, QueueException } from '@neticket/common';
 import { createQueueErrorHandler } from './utils/queue-error.util';
 
 @Injectable()

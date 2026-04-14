@@ -10,7 +10,7 @@ import type { JwtSignOptions } from '@nestjs/jwt';
 import { HeartbeatService } from './heartbeat.service';
 import { VirtualUserInjector } from './virtual-user.injector';
 import { TicketingStateService } from './ticketing-state.service';
-import { TraceModule } from '@neticket/shared-nestjs';
+import { TraceModule } from '@neticket/common';
 
 @Module({
   imports: [

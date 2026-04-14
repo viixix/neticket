@@ -1,5 +1,5 @@
 import { Logger } from '@nestjs/common';
-import { QUEUE_ERROR_CODES, QueueException } from '@neticket/shared-nestjs';
+import { QUEUE_ERROR_CODES, QueueException } from '@neticket/common';
 
 const QUEUE_ERROR_MESSAGES: Record<string, string> = {
   [QUEUE_ERROR_CODES.QUEUE_CONFIG_SEED_FAILED]:
