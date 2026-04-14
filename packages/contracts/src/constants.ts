@@ -29,6 +29,12 @@ export const REDIS_KEYS = {
 
 export const REDIS_KEY_PREFIXES = {
   ACTIVE_USER: "queue:active:user:",
+  CAPTCHA: "captcha:",
+  USER_RESERVED: "reserved:session:",
+};
+
+export const REDIS_TTL_SEC = {
+  CAPTCHA: 300, // 5분
 };
 
 export const REDIS_CHANNELS = {

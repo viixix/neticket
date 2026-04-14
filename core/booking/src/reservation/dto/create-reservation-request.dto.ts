@@ -1,5 +1,11 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsArray, IsNotEmpty, IsNumber, ValidateNested } from 'class-validator';
+import {
+  ArrayMaxSize,
+  IsArray,
+  IsNotEmpty,
+  IsNumber,
+  ValidateNested,
+} from 'class-validator';
 import { Type } from 'class-transformer';
 
 class Seat {
@@ -27,6 +33,7 @@ export class CreateReservationRequestDto {
     type: [Seat],
   })
   @IsArray()
+  @ArrayMaxSize(2)
   @ValidateNested({ each: true })
   @Type(() => Seat)
   seats: Seat[];

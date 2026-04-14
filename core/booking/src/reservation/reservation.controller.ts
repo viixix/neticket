@@ -51,6 +51,11 @@ export class ReservationController {
     @Body() dto: CreateReservationRequestDto,
     @GetUser() user: ActiveUser,
   ): Promise<CreateReservationResponseDto> {
-    return this.reservationService.reserve(dto, user.userId);
+    return this.reservationService.reserve(
+      dto,
+      user.userId,
+      false,
+      user.sessionIds,
+    );
   }
 }
