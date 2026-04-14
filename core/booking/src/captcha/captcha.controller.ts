@@ -7,20 +7,17 @@ import { CaptchaService } from './captcha.service';
 export class CaptchaController {
   constructor(private readonly captchaService: CaptchaService) {}
 
-  // GET /captcha - 보안 문자 이미지 요청
   @Get()
-  getCaptcha(@Res() res: Response) {
-    const { captchaId, svgImage } = this.captchaService.generateCaptcha();
+  async getCaptcha(@Res() res: Response) {
+    const { captchaId, svgImage } = await this.captchaService.generateCaptcha();
 
-    // captchaId를 헤더에 담아서 전송
     res.setHeader('X-Captcha-Id', captchaId);
     res.setHeader('Content-Type', 'image/svg+xml');
     res.send(svgImage);
   }
 
-  // POST /captcha/verify - 보안 문자 검증
   @Post('verify')
-  verifyCaptcha(@Body() body: { captchaId: string; userInput: string }) {
+  async verifyCaptcha(@Body() body: { captchaId: string; userInput: string }) {
     const { captchaId, userInput } = body;
 
     if (!captchaId || !userInput) {
@@ -31,7 +28,10 @@ export class CaptchaController {
       );
     }
 
-    const isValid = this.captchaService.verifyCaptcha(captchaId, userInput);
+    const isValid = await this.captchaService.verifyCaptcha(
+      captchaId,
+      userInput,
+    );
 
     if (!isValid) {
       return {
