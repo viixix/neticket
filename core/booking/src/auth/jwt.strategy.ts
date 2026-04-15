@@ -48,13 +48,18 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
     }
 
     const activeUserKey = `${REDIS_KEY_PREFIXES.ACTIVE_USER}${payload.sub}`;
-    const isActive = await this.redisService.existsInQueue(activeUserKey);
-    if (!isActive) {
-      throw new AuthException(
-        AUTH_ERROR_CODES.USER_NOT_ACTIVE,
-        '활성 큐에 있지 않은 사용자입니다.',
-        401,
-      );
+    try {
+      const isActive = await this.redisService.existsInQueue(activeUserKey);
+      if (!isActive) {
+        throw new AuthException(
+          AUTH_ERROR_CODES.USER_NOT_ACTIVE,
+          '활성 큐에 있지 않은 사용자입니다.',
+          401,
+        );
+      }
+    } catch (e) {
+      if (e instanceof AuthException) throw e;
+      // redis-queue 장애 시 JWT 단독 검증으로 폴백 (activeTTL = JWT TTL = 60s로 동등)
     }
 
     // validate 메서드가 반환하는 값이 request.user에 할당됨

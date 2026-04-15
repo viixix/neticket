@@ -50,8 +50,12 @@ export class TicketSetupService {
       REDIS_KEYS.CURRENT_TICKETING_SESSIONS,
       ...sessionIds,
     );
+    await this.redisService.saddQueue(
+      REDIS_KEYS.CURRENT_TICKETING_SESSIONS,
+      ...sessionIds,
+    );
 
-    await this.redisService.publishToCore(
+    await this.redisService.publishToQueue(
       REDIS_CHANNELS.TICKETING_STATE_CHANGED,
       'setup',
     );
@@ -65,15 +69,16 @@ export class TicketSetupService {
   async openTicketing(): Promise<void> {
     try {
       await this.redisService.set(REDIS_KEYS.TICKETING_OPEN, 'true');
+      await this.redisService.setQueue(REDIS_KEYS.TICKETING_OPEN, 'true');
       this.logger.log('티켓팅 상태 변경: OPEN');
 
       const payload = JSON.stringify({
-        userId: 'open', // 여기서 userId는 실제 유저가 아니라 '상태값'으로 활용
+        userId: 'open',
         traceId: this.traceService.getOrCreateTraceId(),
       });
 
       void this.redisService
-        .publishToCore(REDIS_CHANNELS.TICKETING_STATE_CHANGED, payload)
+        .publishToQueue(REDIS_CHANNELS.TICKETING_STATE_CHANGED, payload)
         .catch((e) => {
           this.logger.warn('오픈 이벤트 발행 실패', (e as Error).stack);
         });
@@ -94,7 +99,9 @@ export class TicketSetupService {
   async tearDown(): Promise<void> {
     try {
       await this.redisService.set(REDIS_KEYS.TICKETING_OPEN, 'false');
+      await this.redisService.setQueue(REDIS_KEYS.TICKETING_OPEN, 'false');
       await this.redisService.del(REDIS_KEYS.CURRENT_TICKETING_SESSIONS);
+      await this.redisService.delQueue(REDIS_KEYS.CURRENT_TICKETING_SESSIONS);
       await this.redisService.deleteAllExceptPrefix('config:');
       await this.redisService.deleteAllExceptPrefixQueue('config:');
       this.logger.log('티켓팅 종료 및 자원 정리 완료 (Tear-down)');
@@ -105,7 +112,7 @@ export class TicketSetupService {
       });
 
       void this.redisService
-        .publishToCore(REDIS_CHANNELS.TICKETING_STATE_CHANGED, payload)
+        .publishToQueue(REDIS_CHANNELS.TICKETING_STATE_CHANGED, payload)
         .catch((e) => {
           this.logger.warn('종료 이벤트 발행 실패', (e as Error).stack);
         });
