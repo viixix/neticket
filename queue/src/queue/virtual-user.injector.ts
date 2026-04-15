@@ -4,7 +4,11 @@ import { randomBytes } from 'crypto';
 import Redis from 'ioredis';
 import { QueueConfigService } from './queue-config.service';
 import { TicketingStateService } from './ticketing-state.service';
-import { QUEUE_ERROR_CODES, TraceService } from '@neticket/common';
+import {
+  QUEUE_ERROR_CODES,
+  QueueException,
+  TraceService,
+} from '@neticket/common';
 import { createQueueErrorHandler } from './utils/queue-error.util';
 
 @Injectable()
@@ -151,14 +155,10 @@ export class VirtualUserInjector {
       const errorResult = results?.find(([err]) => err);
 
       if (errorResult) {
-        const [redisError] = errorResult;
-        throw this.handleError(
-          redisError,
+        throw new QueueException(
           QUEUE_ERROR_CODES.QUEUE_VIRTUAL_INJECT_FAILED,
-          {
-            isVirtual: true,
-            results,
-          },
+          '가상 유저 주입 중 오류가 발생했습니다.',
+          500,
         );
       }
 
