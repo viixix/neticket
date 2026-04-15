@@ -21,12 +21,12 @@ export class TicketingStateService implements OnModuleInit, OnModuleDestroy {
   private subscriber: Redis | null = null;
 
   constructor(
-    @Inject(PROVIDERS.REDIS_CORE) private readonly coreRedis: Redis,
+    @Inject(PROVIDERS.REDIS_QUEUE) private readonly redis: Redis,
     private readonly traceService: TraceService,
   ) {}
 
   async onModuleInit(): Promise<void> {
-    this.subscriber = this.coreRedis.duplicate();
+    this.subscriber = this.redis.duplicate();
     await this.subscriber.subscribe(REDIS_CHANNELS.TICKETING_STATE_CHANGED);
 
     this.logger.log('티켓팅 상태 동기화 구독 시작', {
@@ -74,7 +74,7 @@ export class TicketingStateService implements OnModuleInit, OnModuleDestroy {
 
     this.refreshPromise = (async () => {
       try {
-        const isOpen = await this.coreRedis.get(REDIS_KEYS.TICKETING_OPEN);
+        const isOpen = await this.redis.get(REDIS_KEYS.TICKETING_OPEN);
         const newState = isOpen === 'true';
 
         this.logger.debug('티켓팅 상태 캐시 갱신 완료', { isOpen: newState });

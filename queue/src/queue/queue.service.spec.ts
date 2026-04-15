@@ -17,6 +17,7 @@ describe('QueueService', () => {
     exists: jest.fn(),
     multi: jest.fn(),
     set: jest.fn(),
+    smembers: jest.fn().mockResolvedValue([]),
   };
   const jwtServiceMock = { signAsync: jest.fn() };
   const heartbeatServiceMock = {
@@ -242,6 +243,7 @@ describe('QueueService', () => {
         expect(jwtServiceMock.signAsync).toHaveBeenCalledWith({
           sub: 'user-abc',
           type: 'TICKETING',
+          sessionIds: [],
         });
       });
     });
