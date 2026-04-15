@@ -16,7 +16,7 @@ export class QueueStatusResponseDto implements QueueStatusResponse {
     required: false,
     description: '활성 토큰',
     example:
-      'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiJfSkVSUllfLXdhcy1oZXJlIiwidHlwZSI6IlRJQ0tFVElORyIsImlhdCI6MTUxNjIzOTAyMn0.J9jEisc7TwIw8Ri8jZSArVhEcnlMvYQtDqmanlo1Abk',
+      'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJfSkVSUllfLXdhcy1oZXJlIiwidHlwZSI6IlRJQ0tFVElORyIsInNlc3Npb25JZHMiOlsxLDIsM10sImlhdCI6MTc0NDU2MDAwMCwiZXhwIjoxNzQ0NTYzNjAwfQ.ocqkG_uac5KzV2tTQdeCwAiNh3jTQsj4nkCUXUSuN5s',
   })
   token?: string;
 }

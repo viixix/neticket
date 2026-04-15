@@ -10,6 +10,7 @@
     "dev:queue": "pnpm --filter @neticket/queue start:dev",
     "dev:frontend": "pnpm --filter frontend dev",
     "dev": "concurrently -n show,booking,queue,frontend -c blue,green,yellow,magenta \"pnpm dev:show\" \"pnpm dev:booking\" \"pnpm dev:queue\" \"pnpm dev:frontend\"",
+    "build:packages": "pnpm --filter \"@neticket/contracts\" --filter \"@neticket/common\" build",
     "build:show": "pnpm --filter @neticket/show build",
     "build:booking": "pnpm --filter @neticket/booking build",
     "build:queue": "pnpm --filter @neticket/queue build",
