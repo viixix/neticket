@@ -19,63 +19,103 @@ export class VenuesService {
   ) {}
 
   async create(requestDto: CreateVenueRequestDto): Promise<{ id: number }> {
-    const venue = new Venue(requestDto.venue_name, requestDto.block_map_url);
-    const savedVenue = await this.venuesRepository.save(venue);
-    return { id: savedVenue.id };
+    try {
+      const venue = new Venue(requestDto.venue_name, requestDto.block_map_url);
+      const savedVenue = await this.venuesRepository.save(venue);
+      return { id: savedVenue.id };
+    } catch (e) {
+      if (e instanceof TicketException) throw e;
+      throw new TicketException(
+        API_ERROR_CODES.DATABASE_UNAVAILABLE,
+        'DB 서비스를 일시적으로 사용할 수 없습니다.',
+        503,
+      );
+    }
   }
 
   async findAll(): Promise<GetVenuesResponseDto> {
-    const venues = await this.venuesRepository.find();
-    return GetVenuesResponseDto.fromEntities(venues);
+    try {
+      const venues = await this.venuesRepository.find();
+      return GetVenuesResponseDto.fromEntities(venues);
+    } catch (e) {
+      if (e instanceof TicketException) throw e;
+      throw new TicketException(
+        API_ERROR_CODES.DATABASE_UNAVAILABLE,
+        'DB 서비스를 일시적으로 사용할 수 없습니다.',
+        503,
+      );
+    }
   }
 
-  async findOneWithBlocks(id: number): Promise<GetVenueResponseDto | null> {
-    const venue = await this.venuesRepository.findOne({
-      where: { id },
-      relations: ['blocks'],
-    });
+  async findOneWithBlocks(id: number): Promise<GetVenueResponseDto> {
+    try {
+      const venue = await this.venuesRepository.findOne({
+        where: { id },
+        relations: ['blocks'],
+      });
 
-    if (!venue) {
-      return null;
+      if (!venue) {
+        throw new TicketException(
+          API_ERROR_CODES.VENUE_NOT_FOUND,
+          '공연장을 찾을 수 없습니다.',
+          404,
+        );
+      }
+
+      return GetVenueResponseDto.fromEntity(venue);
+    } catch (e) {
+      if (e instanceof TicketException) throw e;
+      throw new TicketException(
+        API_ERROR_CODES.DATABASE_UNAVAILABLE,
+        'DB 서비스를 일시적으로 사용할 수 없습니다.',
+        503,
+      );
     }
-
-    return GetVenueResponseDto.fromEntity(venue);
   }
 
   async createBlocks(
     venueId: number,
     requestDto: CreateBlocksRequestDto,
   ): Promise<void> {
-    const venue = await this.venuesRepository.findOne({
-      where: { id: venueId },
-    });
+    try {
+      const venue = await this.venuesRepository.findOne({
+        where: { id: venueId },
+      });
 
-    if (!venue) {
+      if (!venue) {
+        throw new TicketException(
+          API_ERROR_CODES.VENUE_NOT_FOUND,
+          '공연장을 찾을 수 없습니다.',
+          404,
+        );
+      }
+
+      const requestBlockNames = requestDto.blocks.map((b) => b.blockDataName);
+      const duplicateNames = await this.blocksRepository.findExistingBlockNames(
+        venueId,
+        requestBlockNames,
+      );
+
+      if (duplicateNames.length > 0) {
+        throw new TicketException(
+          API_ERROR_CODES.BLOCK_NAME_DUPLICATE,
+          `중복된 블록 이름이 존재합니다: ${duplicateNames.join(', ')}`,
+          409,
+        );
+      }
+
+      const blocks = requestDto.blocks.map((dto) => {
+        return new Block(venue.id, dto.blockDataName, dto.rowSize, dto.colSize);
+      });
+
+      await this.blocksRepository.save(blocks);
+    } catch (e) {
+      if (e instanceof TicketException) throw e;
       throw new TicketException(
-        API_ERROR_CODES.VENUE_NOT_FOUND,
-        '공연장을 찾을 수 없습니다.',
-        404,
+        API_ERROR_CODES.DATABASE_UNAVAILABLE,
+        'DB 서비스를 일시적으로 사용할 수 없습니다.',
+        503,
       );
     }
-
-    const requestBlockNames = requestDto.blocks.map((b) => b.blockDataName);
-    const duplicateNames = await this.blocksRepository.findExistingBlockNames(
-      venueId,
-      requestBlockNames,
-    );
-
-    if (duplicateNames.length > 0) {
-      throw new TicketException(
-        API_ERROR_CODES.BLOCK_NAME_DUPLICATE,
-        `중복된 블록 이름이 존재합니다: ${duplicateNames.join(', ')}`,
-        409,
-      );
-    }
-
-    const blocks = requestDto.blocks.map((dto) => {
-      return new Block(venue.id, dto.blockDataName, dto.rowSize, dto.colSize);
-    });
-
-    await this.blocksRepository.save(blocks);
   }
 }
