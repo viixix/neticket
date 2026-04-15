@@ -130,7 +130,8 @@ jobs:
 
             echo "🚀 $SERVICE_NAME 배포 중 (Healthcheck 대기)..."
             docker compose pull $SERVICE_NAME cadvisor
-            docker compose up -d --wait --no-build $SERVICE_NAME cadvisor
+            docker compose up -d --wait --no-build --no-deps $SERVICE_NAME
+            docker compose up -d --wait --no-build --no-deps cadvisor
             docker compose up -d --force-recreate --no-build nginx
 
             # 6. 디스크 청소 (24시간 이내 이미지는 보존하여 롤백 대비)
@@ -185,7 +186,8 @@ jobs:
 
             echo "🚀 $SERVICE_NAME 배포 중 (Healthcheck 대기)..."
             docker compose pull $SERVICE_NAME cadvisor
-            docker compose up -d --wait --no-build $SERVICE_NAME cadvisor
+            docker compose up -d --wait --no-build --no-deps $SERVICE_NAME
+            docker compose up -d --wait --no-build --no-deps cadvisor
             docker compose up -d --force-recreate --no-build nginx
 
             # 6. 디스크 청소 (24시간 이내 이미지는 보존하여 롤백 대비)
