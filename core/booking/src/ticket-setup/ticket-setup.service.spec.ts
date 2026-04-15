@@ -155,7 +155,7 @@ describe('TicketSetupService', () => {
       );
     });
 
-    it('실패 시 티켓팅 상태를 close(false)로 되돌려야 한다', async () => {
+    it('실패 시 core와 queue 모두 close(false)로 롤백해야 한다', async () => {
       redisService.set.mockRejectedValueOnce(new Error('Redis Error'));
 
       await service.openTicketing();
@@ -164,10 +164,20 @@ describe('TicketSetupService', () => {
         REDIS_KEYS.TICKETING_OPEN,
         'false',
       );
+      expect(jest.mocked(redisService.setQueue)).toHaveBeenCalledWith(
+        REDIS_KEYS.TICKETING_OPEN,
+        'false',
+      );
     });
   });
 
   describe('tearDown', () => {
+    it('TICKETING_OPEN 쓰기 실패 시 에러를 위로 던져야 한다', async () => {
+      redisService.set.mockRejectedValueOnce(new Error('Redis Error'));
+
+      await expect(service.tearDown()).rejects.toThrow('Redis Error');
+    });
+
     it('티켓팅 상태를 close(false)로 설정해야 한다', async () => {
       await service.tearDown();
       expect(jest.mocked(redisService.set)).toHaveBeenCalledWith(

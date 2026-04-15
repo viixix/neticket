@@ -85,14 +85,19 @@ export class TicketSetupService {
     } catch (e) {
       const err = e as Error;
       this.logger.error('티켓팅 오픈 처리 실패', err.stack);
-      await this.redisService
-        .set(REDIS_KEYS.TICKETING_OPEN, 'false')
-        .catch((rollbackErr) => {
+      const rollbackResults = await Promise.allSettled([
+        this.redisService.set(REDIS_KEYS.TICKETING_OPEN, 'false'),
+        this.redisService.setQueue(REDIS_KEYS.TICKETING_OPEN, 'false'),
+      ]);
+      const labels = ['core', 'queue'] as const;
+      for (const [i, r] of rollbackResults.entries()) {
+        if (r.status === 'rejected' && r.reason instanceof Error) {
           this.logger.warn(
-            '오픈 실패 후 롤백 처리 실패',
-            (rollbackErr as Error).stack,
+            `오픈 실패 후 롤백 처리 실패 (${labels[i]})`,
+            r.reason.stack,
           );
-        });
+        }
+      }
     }
   }
 
@@ -118,6 +123,7 @@ export class TicketSetupService {
         });
     } catch (e) {
       this.logger.error('티켓팅 종료 처리(Tear-down) 실패', (e as Error).stack);
+      throw e;
     }
   }
 
