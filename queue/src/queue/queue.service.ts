@@ -19,6 +19,7 @@ export class QueueService {
 
   constructor(
     @Inject(PROVIDERS.REDIS_QUEUE) private readonly redis: Redis,
+    @Inject(PROVIDERS.REDIS_CORE) private readonly coreRedis: Redis,
     private readonly jwtService: JwtService,
     private readonly heartbeatService: HeartbeatService,
     private readonly virtualUserInjector: VirtualUserInjector,
@@ -153,7 +154,7 @@ export class QueueService {
   }
 
   private generateAccessToken = async (userId: string) => {
-    const sessionIdStrs = await this.redis.smembers(
+    const sessionIdStrs = await this.coreRedis.smembers(
       REDIS_KEYS.CURRENT_TICKETING_SESSIONS,
     );
     const sessionIds = sessionIdStrs.map(Number);
