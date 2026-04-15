@@ -85,6 +85,18 @@ export class RedisService implements OnModuleDestroy {
     return this.coreClient.hsetnx(key, field, value);
   }
 
+  async setQueue(key: string, value: string): Promise<string> {
+    return this.queueClient.set(key, value);
+  }
+
+  async saddQueue(key: string, ...members: string[]): Promise<number> {
+    return this.queueClient.sadd(key, ...members);
+  }
+
+  async delQueue(key: string): Promise<number> {
+    return this.queueClient.del(key);
+  }
+
   async getQueue(key: string): Promise<string | null> {
     return this.queueClient.get(key);
   }
