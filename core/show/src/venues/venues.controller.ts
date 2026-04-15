@@ -59,8 +59,7 @@ export class VenuesController {
   @ApiParam({ name: 'id', description: '공연장 ID', example: 1 })
   @ApiResponse({
     status: 200,
-    description:
-      '성공적으로 공연장 정보를 조회함 (존재하지 않으면 빈 객체 반환)',
+    description: '성공적으로 공연장 정보를 조회함',
     type: GetVenueResponseDto,
     schema: {
       example: {
@@ -97,7 +96,6 @@ export class VenuesController {
     },
   })
   async findOne(@Param('id', ParseIntPipe) id: number) {
-    const venue = await this.venuesService.findOneWithBlocks(id);
-    return venue || {};
+    return this.venuesService.findOneWithBlocks(id);
   }
 }
