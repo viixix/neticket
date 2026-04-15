@@ -27,13 +27,22 @@ export class ReservationService {
     sessionId: number,
     blockId: number,
   ): Promise<GetReservationsResponseDto> {
-    await this.validateSessionBlock(sessionId, blockId);
+    try {
+      await this.validateSessionBlock(sessionId, blockId);
 
-    const { rowSize, colSize } = await this.getBlockInfo(blockId);
-    const keys = this.generateSeatKeys(sessionId, blockId, rowSize, colSize);
-    const values = await this.redisService.mget(keys);
+      const { rowSize, colSize } = await this.getBlockInfo(blockId);
+      const keys = this.generateSeatKeys(sessionId, blockId, rowSize, colSize);
+      const values = await this.redisService.mget(keys);
 
-    return { seats: this.mapToArray(values, rowSize, colSize) };
+      return { seats: this.mapToArray(values, rowSize, colSize) };
+    } catch (e) {
+      if (e instanceof TicketException) throw e;
+      throw new TicketException(
+        TICKET_ERROR_CODES.REDIS_UNAVAILABLE,
+        '좌석 조회 서비스를 일시적으로 사용할 수 없습니다.',
+        503,
+      );
+    }
   }
 
   async reserve(
@@ -42,32 +51,41 @@ export class ReservationService {
     isVirtual: boolean = false,
     sessionIds?: number[],
   ): Promise<CreateReservationResponseDto> {
-    const { session_id: sessionId, seats } = dto;
-    await this.validateTicketingOpen();
+    try {
+      const { session_id: sessionId, seats } = dto;
+      await this.validateTicketingOpen();
 
-    if (sessionIds !== undefined && !sessionIds.includes(sessionId)) {
+      if (sessionIds !== undefined && !sessionIds.includes(sessionId)) {
+        throw new TicketException(
+          TICKET_ERROR_CODES.INVALID_SESSION_TOKEN,
+          '토큰에 포함된 회차 정보와 요청 회차가 일치하지 않습니다.',
+          403,
+        );
+      }
+
+      const seatKeys = await this.prepareReservationKeys(sessionId, seats);
+      const userReservedKey = `${REDIS_KEY_PREFIXES.USER_RESERVED}${sessionId}:user:${userId}`;
+      const rank = await this.executeAtomicReservation(
+        seatKeys,
+        sessionId,
+        userId,
+        userReservedKey,
+        isVirtual,
+      );
+      await this.publishReservationDoneEvent(userId, isVirtual);
+
+      const virtual_user_size = await this.getVirtualSize();
+      const reserved_at = new Date().toISOString();
+
+      return { rank, seats, virtual_user_size, reserved_at };
+    } catch (e) {
+      if (e instanceof TicketException) throw e;
       throw new TicketException(
-        TICKET_ERROR_CODES.INVALID_SESSION_TOKEN,
-        '토큰에 포함된 회차 정보와 요청 회차가 일치하지 않습니다.',
-        403,
+        TICKET_ERROR_CODES.REDIS_UNAVAILABLE,
+        '예약 서비스를 일시적으로 사용할 수 없습니다.',
+        503,
       );
     }
-
-    const seatKeys = await this.prepareReservationKeys(sessionId, seats);
-    const userReservedKey = `${REDIS_KEY_PREFIXES.USER_RESERVED}${sessionId}:user:${userId}`;
-    const rank = await this.executeAtomicReservation(
-      seatKeys,
-      sessionId,
-      userId,
-      userReservedKey,
-      isVirtual,
-    );
-    await this.publishReservationDoneEvent(userId, isVirtual);
-
-    const virtual_user_size = await this.getVirtualSize();
-    const reserved_at = new Date().toISOString();
-
-    return { rank, seats, virtual_user_size, reserved_at };
   }
 
   private async getVirtualSize(): Promise<number> {
