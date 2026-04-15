@@ -25,6 +25,7 @@ export const REDIS_KEYS = {
   CONFIG_TICKET: "config:ticket",
 
   INJECTOR_STATE: "queue:injector:total_injected_count",
+  INJECTION_LOCK: "queue:started:ticketing",
 };
 
 export const REDIS_KEY_PREFIXES = {

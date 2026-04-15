@@ -26,68 +26,76 @@ export class QueueService {
     private readonly ticketingStateService: TicketingStateService,
   ) {}
 
-  /**
-   * [Public] 대기열 진입
-   * - 기존 유저인지 확인 후, 아니면 신규 생성 및 하트비트 초기화
-   */
   async createEntry(userId?: string): Promise<QueueEntryResponse> {
-    // 1. 기존 유저 확인
-    if (userId) {
-      const position = await this.getPosition(userId);
-      if (position) {
-        return { userId, position };
+    try {
+      if (userId) {
+        const position = await this.getPosition(userId);
+        if (position !== null) {
+          return { userId, position };
+        }
       }
+
+      await this.validateTicketingOpen();
+
+      const newUserId = this.generateUserId();
+      await this.registerUser(newUserId);
+
+      const newUserPos = await this.getPosition(newUserId);
+      if (newUserPos === null) {
+        throw new QueueException(
+          QUEUE_ERROR_CODES.QUEUE_REGISTRATION_FAILED,
+          '대기열 등록 후 순번 조회에 실패했습니다.',
+          500,
+        );
+      }
+
+      if (newUserPos === 1) {
+        this.hasTriggeredInjection = false;
+      }
+      void this.ensureVirtualInjectionStarted();
+
+      return { userId: newUserId, position: newUserPos };
+    } catch (e) {
+      if (e instanceof QueueException) throw e;
+      throw new QueueException(
+        QUEUE_ERROR_CODES.QUEUE_REDIS_UNAVAILABLE,
+        '대기열 서비스를 일시적으로 사용할 수 없습니다.',
+        503,
+      );
     }
-
-    await this.validateTicketingOpen();
-
-    const newUserId = this.generateUserId();
-    await this.registerUser(newUserId);
-
-    const newUserPos = await this.getPosition(newUserId);
-
-    if (newUserPos === 1) {
-      this.hasTriggeredInjection = false;
-    }
-    void this.ensureVirtualInjectionStarted();
-
-    return {
-      userId: newUserId,
-      position: newUserPos,
-    };
   }
 
-  /**
-   * [Public] 상태 확인 및 토큰 발행
-   */
   async getStatus(userId: string | undefined): Promise<QueueStatusResponse> {
-    const isOpen = await this.ticketingStateService.isOpen();
+    try {
+      const isOpen = await this.ticketingStateService.isOpen();
+      const status = isOpen ? 'open' : 'closed';
 
-    const status = isOpen ? 'open' : 'closed';
+      if (!userId) {
+        return { position: null, status };
+      }
 
-    if (!userId) {
-      return { position: null, status };
+      const isActive = await this.checkActiveStatus(userId);
+      if (isActive) {
+        const token = await this.generateAccessToken(userId);
+        return { token, position: 0, status };
+      }
+
+      const position = await this.getPosition(userId);
+
+      if (position !== null) {
+        await this.updateHeartbeat(userId);
+      }
+
+      return { position, status };
+    } catch (e) {
+      if (e instanceof QueueException) throw e;
+      throw new QueueException(
+        QUEUE_ERROR_CODES.QUEUE_REDIS_UNAVAILABLE,
+        '대기열 서비스를 일시적으로 사용할 수 없습니다.',
+        503,
+      );
     }
-
-    // 1. 활성 상태 확인
-    const isActive = await this.checkActiveStatus(userId);
-    if (isActive) {
-      const token = await this.generateAccessToken(userId);
-      return { token, position: 0, status };
-    }
-
-    // 2. 대기 순번 확인
-    const position = await this.getPosition(userId);
-
-    // 3. 대기 중인 유저라면 하트비트 갱신
-    if (position !== null) {
-      await this.updateHeartbeat(userId);
-    }
-
-    return { position, status };
   }
-
-  // [Private] 세부 구현
 
   private generateUserId = () => randomBytes(12).toString('base64url');
 
@@ -119,7 +127,7 @@ export class QueueService {
         return;
       }
 
-      const lockKey = 'queue:started:ticketing';
+      const lockKey = REDIS_KEYS.INJECTION_LOCK;
       const acquired = await this.redis.set(lockKey, 'OK', 'EX', 86400, 'NX');
 
       if (acquired === 'OK') {
@@ -164,8 +172,8 @@ export class QueueService {
     });
   };
 
-  private updateHeartbeat = async (userId: string) =>
-    await this.heartbeatService.update(userId);
+  private updateHeartbeat = (userId: string) =>
+    this.heartbeatService.update(userId);
 
   private async validateTicketingOpen(): Promise<void> {
     const isOpen = await this.ticketingStateService.isOpen();
