@@ -3,8 +3,8 @@
   "compilerOptions": {
     "baseUrl": "..",
     "paths": {
-      "@neticket/shared-nestjs": ["packages/shared-nestjs/src/index.ts"],
-      "@neticket/shared-nestjs/*": ["packages/shared-nestjs/src/*"]
+      "@neticket/contracts": ["packages/contracts/src/index.ts"],
+      "@neticket/common": ["packages/common/src/index.ts"]
     },
     "module": "nodenext",
     "moduleResolution": "nodenext",
