@@ -57,7 +57,10 @@ export class TicketSetupService {
 
     await this.redisService.publishToQueue(
       REDIS_CHANNELS.TICKETING_STATE_CHANGED,
-      'setup',
+      JSON.stringify({
+        state: 'setup',
+        traceId: this.traceService.getOrCreateTraceId(),
+      }),
     );
 
     const registTasks = sessions.map((session) => this.registToRedis(session));
@@ -73,7 +76,7 @@ export class TicketSetupService {
       this.logger.log('티켓팅 상태 변경: OPEN');
 
       const payload = JSON.stringify({
-        userId: 'open',
+        state: 'open',
         traceId: this.traceService.getOrCreateTraceId(),
       });
 
@@ -112,7 +115,7 @@ export class TicketSetupService {
       this.logger.log('티켓팅 종료 및 자원 정리 완료 (Tear-down)');
 
       const payload = JSON.stringify({
-        userId: 'close',
+        state: 'close',
         traceId: this.traceService.getOrCreateTraceId(),
       });
 

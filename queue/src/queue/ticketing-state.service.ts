@@ -40,7 +40,7 @@ export class TicketingStateService implements OnModuleInit, OnModuleDestroy {
           message,
           async (payload) => {
             this.logger.log('티켓팅 상태 변경 알림 수신 -> 로컬 캐시 무효화', {
-              receivedState: payload.userId,
+              receivedState: payload.state,
             });
             this.lastSyncAt = 0;
             await this.refreshIfNeeded();
