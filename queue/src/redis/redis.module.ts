@@ -21,6 +21,9 @@ import { REDIS_COMMANDS } from './redis.commands';
           port,
           password,
           retryStrategy: (times) => Math.min(times * 50, 2000),
+          commandTimeout: 5000,
+          connectTimeout: 10000,
+          maxRetriesPerRequest: 2,
         });
 
         redis.defineCommand(REDIS_COMMANDS.SYNC_AND_PROMOTE_WAITERS.name, {
@@ -46,6 +49,9 @@ import { REDIS_COMMANDS } from './redis.commands';
           port,
           password,
           retryStrategy: (times) => Math.min(times * 50, 2000),
+          commandTimeout: 5000,
+          connectTimeout: 10000,
+          maxRetriesPerRequest: 2,
         });
       },
       inject: [ConfigService],
