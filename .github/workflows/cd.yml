@@ -225,7 +225,7 @@ jobs:
           script: |
             set -e
             cd /app/neticket/core
-            docker compose up -d --force-recreate --no-build nginx
+            docker compose up -d --force-recreate --no-build --no-deps nginx
             docker image prune -af --filter "until=24h"
             echo "✅ nginx 재시작 완료"
 
