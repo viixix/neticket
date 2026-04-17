@@ -51,10 +51,10 @@ export class QueueConfigService implements OnModuleInit {
 
     /* eslint-disable prettier/prettier */
     const workerMap: Record<string, [string | undefined, string]> = {
-      'worker.max_capacity': [env.QUEUE_MAX_CAPACITY, '10'],
+      'worker.max_capacity': [env.QUEUE_MAX_CAPACITY, '1000'],
       'worker.heartbeat_timeout_ms': [env.QUEUE_HEARTBEAT_TIMEOUT_MS, '60000'],
       'worker.active_ttl_ms': [env.QUEUE_ACTIVE_TTL_MS, '60000'],
-      'worker.transfer_interval_sec': [env.QUEUE_SCHEDULE_TRANSFER_INTERVAL_SEC, '3',],
+      'worker.transfer_interval_sec': [env.QUEUE_SCHEDULE_TRANSFER_INTERVAL_SEC, '1',],
     };
 
     const heartbeatMap: Record<string, [string | undefined, string]> = {
