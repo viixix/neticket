@@ -20,9 +20,8 @@ services:
 
   queue:
     image: ${GCP_REGISTRY}/queue:${IMAGE_TAG:-latest}
-    container_name: queue
-    ports:
-      - "3003:3003"
+    expose:
+      - "3003"
     environment:
       - NODE_ENV=production
       - REDIS_QUEUE_HOST=${REDIS_QUEUE_HOST:-redis}
