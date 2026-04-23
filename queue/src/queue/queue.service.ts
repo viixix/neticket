@@ -11,6 +11,15 @@ import { TicketingStateService } from './ticketing-state.service';
 import { QUEUE_ERROR_CODES, QueueException } from '@neticket/common';
 import { createQueueErrorHandler } from './utils/queue-error.util';
 
+interface RedisWithCommands extends Redis {
+  registerAndGetPosition(
+    waitingQueue: string,
+    heartbeatQueue: string,
+    score: number,
+    userId: string,
+  ): Promise<number>;
+}
+
 @Injectable()
 export class QueueService {
   private readonly logger = new Logger(QueueService.name);
@@ -18,7 +27,7 @@ export class QueueService {
   private hasTriggeredInjection = false;
 
   constructor(
-    @Inject(PROVIDERS.REDIS_QUEUE) private readonly redis: Redis,
+    @Inject(PROVIDERS.REDIS_QUEUE) private readonly redis: RedisWithCommands,
     private readonly jwtService: JwtService,
     private readonly heartbeatService: HeartbeatService,
     private readonly virtualUserInjector: VirtualUserInjector,
@@ -38,16 +47,7 @@ export class QueueService {
       await this.validateTicketingOpen();
 
       const newUserId = this.generateUserId();
-      await this.registerUser(newUserId);
-
-      const newUserPos = await this.getPosition(newUserId);
-      if (newUserPos === null) {
-        throw new QueueException(
-          QUEUE_ERROR_CODES.QUEUE_REGISTRATION_FAILED,
-          '대기열 등록 후 순번 조회에 실패했습니다.',
-          500,
-        );
-      }
+      const newUserPos = await this.registerAndGetPosition(newUserId);
 
       if (newUserPos === 1) {
         this.hasTriggeredInjection = false;
@@ -107,13 +107,14 @@ export class QueueService {
     return rank + 1;
   }
 
-  private async registerUser(userId: string) {
-    const score = Date.now();
-    await this.redis
-      .multi()
-      .zadd(REDIS_KEYS.WAITING_QUEUE, 'NX', score, userId)
-      .zadd(REDIS_KEYS.HEARTBEAT_QUEUE, 'NX', score, userId)
-      .exec();
+  private async registerAndGetPosition(userId: string): Promise<number> {
+    const rank = await this.redis.registerAndGetPosition(
+      REDIS_KEYS.WAITING_QUEUE,
+      REDIS_KEYS.HEARTBEAT_QUEUE,
+      Date.now(),
+      userId,
+    );
+    return rank + 1;
   }
 
   private async ensureVirtualInjectionStarted() {
