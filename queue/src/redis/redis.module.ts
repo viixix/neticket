@@ -31,6 +31,11 @@ import { REDIS_COMMANDS } from './redis.commands';
           lua: REDIS_COMMANDS.SYNC_AND_PROMOTE_WAITERS.lua,
         });
 
+        redis.defineCommand(REDIS_COMMANDS.REGISTER_AND_GET_POSITION.name, {
+          numberOfKeys: REDIS_COMMANDS.REGISTER_AND_GET_POSITION.numberOfKeys,
+          lua: REDIS_COMMANDS.REGISTER_AND_GET_POSITION.lua,
+        });
+
         return redis;
       },
       inject: [ConfigService],
