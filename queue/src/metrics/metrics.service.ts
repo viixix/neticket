@@ -19,6 +19,26 @@ export class MetricsService implements OnModuleInit {
     registers: [this.registry],
   });
 
+  readonly redisCommandDuration = new Histogram({
+    name: 'queue_redis_duration_seconds',
+    help: 'Redis 명령어별 실행 시간',
+    labelNames: ['command'],
+    buckets: [0.001, 0.005, 0.01, 0.025, 0.05, 0.1, 0.25, 0.5],
+    registers: [this.registry],
+  });
+
+  readonly waitingQueueLength = new Gauge({
+    name: 'queue_waiting_length',
+    help: '대기 중인 유저 수',
+    registers: [this.registry],
+  });
+
+  readonly activeCount = new Gauge({
+    name: 'queue_active_count',
+    help: '활성 유저 수',
+    registers: [this.registry],
+  });
+
   onModuleInit() {
     collectDefaultMetrics({ register: this.registry });
   }

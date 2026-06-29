@@ -11,10 +11,12 @@ import { HeartbeatService } from './heartbeat.service';
 import { VirtualUserInjector } from './virtual-user.injector';
 import { TicketingStateService } from './ticketing-state.service';
 import { TraceModule } from '@neticket/common';
+import { MetricsModule } from '../metrics/metrics.module';
 
 @Module({
   imports: [
     TraceModule,
+    MetricsModule,
     JwtModule.registerAsync({
       inject: [ConfigService],
       useFactory: (configService: ConfigService) => {

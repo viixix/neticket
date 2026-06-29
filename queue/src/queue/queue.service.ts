@@ -10,6 +10,7 @@ import { QueueConfigService } from './queue-config.service';
 import { TicketingStateService } from './ticketing-state.service';
 import { QUEUE_ERROR_CODES, QueueException } from '@neticket/common';
 import { createQueueErrorHandler } from './utils/queue-error.util';
+import { MetricsService } from '../metrics/metrics.service';
 
 interface RedisWithCommands extends Redis {
   registerAndGetPosition(
@@ -33,6 +34,7 @@ export class QueueService {
     private readonly virtualUserInjector: VirtualUserInjector,
     private readonly configService: QueueConfigService,
     private readonly ticketingStateService: TicketingStateService,
+    private readonly metricsService: MetricsService,
   ) {}
 
   async createEntry(userId?: string): Promise<QueueEntryResponse> {
@@ -100,7 +102,11 @@ export class QueueService {
   private generateUserId = () => randomBytes(12).toString('base64url');
 
   private async getPosition(userId: string) {
+    const end = this.metricsService.redisCommandDuration.startTimer({
+      command: 'zrank',
+    });
     const rank = await this.redis.zrank(REDIS_KEYS.WAITING_QUEUE, userId);
+    end();
     if (rank === null) {
       return null;
     }
@@ -108,12 +114,16 @@ export class QueueService {
   }
 
   private async registerAndGetPosition(userId: string): Promise<number> {
+    const end = this.metricsService.redisCommandDuration.startTimer({
+      command: 'lua_register',
+    });
     const rank = await this.redis.registerAndGetPosition(
       REDIS_KEYS.WAITING_QUEUE,
       REDIS_KEYS.HEARTBEAT_QUEUE,
       Date.now(),
       userId,
     );
+    end();
     return rank + 1;
   }
 
