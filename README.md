@@ -1,21 +1,36 @@
+<details>
+<summary>포크 후 변경 사항</summary>
+
+## 포크 후 변경 사항
+
+- **서비스명 변경**: beastcamp → neticket, api-server → show, ticket-server → booking, queue-backend → queue
+- **인프라 전환**: NCP(Naver Cloud Platform) → GCP(Google Cloud Platform)
+- **대기열 개선**: ZADD+ZRANK Lua 원자화로 race condition 제거, nginx 글로벌 rate limit + thundering herd 완충, docker compose scale 지원
+- **부하 테스트 도구**: [neticket-agent](https://github.com/viixix/neticket-agent) — 가상 유저 대량 투입 CLI (3종 페르소나 모델링)
+
+</details>
+
 <img src="https://github.com/user-attachments/assets/c83574ef-a460-4e06-9490-2c34d056ac81" width="1000"/>
 
 <div align="center">
 
 ### 🎟️ 내티켓 - 티켓팅 시뮬레이터 (Ticketing Simulator)
 
-수십만명이 참여하는 경쟁이 치열한 티켓팅을 시도해보신적이 있으신가요? 기회는 단 한번 뿐, 티켓팅 성공률은 매우 낮고, 원하는 시간과 좌석을 선택하기 어렵습니다. 
+수십만명이 참여하는 경쟁이 치열한 티켓팅을 시도해보신적이 있으신가요? 기회는 단 한번 뿐, 티켓팅 성공률은 매우 낮고, 원하는 시간과 좌석을 선택하기 어렵습니다.
 하지만, 지정된 시각에만 오픈되는 티켓팅을 사전에 연습하기는 어렵고, 실패하면 다시 기회가 오지 않습니다.
 
-> 실전과 가장 유사한 티켓팅 연습 환경을 제공하는 티켓팅 시뮬레이터 
+> 실전과 가장 유사한 티켓팅 연습 환경을 제공하는 티켓팅 시뮬레이터
 
 이에 저희는 경쟁이 치열한 공연 티켓팅을 앞둔 사람들을 위한 실전 연습 서비스인 **티켓팅 시뮬레이터** 를 기획하고 개발하게 되었습니다.
-
 
  <br />
   </p>
     <p>
+<<<<<<< HEAD
         <a href="https://www.neticket.site/" target="_blank">지금 바로 접속하기</a>
+=======
+        <a href="https://web10.site" target="_blank"><s>지금 바로 접속하기</s></a>
+>>>>>>> e45fbc2 (docs(readme): 포크 후 변경 사항 토글 추가)
     </p>
     <a href="https://chaegang.notion.site/WEB_10-TEAM_PROJECT-2c4748edda9b801ba43cc3708bf1fd54?source=copy_link" target="_blank">개발팀노션</a> &nbsp; &nbsp; |&nbsp; &nbsp; 
     <a href="https://github.com/boostcampwm2025/web10-beastcamp/wiki" target="_blank">Wiki</a> &nbsp; &nbsp; |&nbsp; &nbsp;
@@ -24,11 +39,10 @@
 
 <br/><br/>
 
-
 https://github.com/user-attachments/assets/c9067dfb-ec05-43ac-81c4-6cd4ca82cf3f
 
-
 ## 팀원 소개
+
 <table>
   <tr>
     <td align="center">
@@ -63,21 +77,18 @@ https://github.com/user-attachments/assets/c9067dfb-ec05-43ac-81c4-6cd4ca82cf3f
   </tr>
 </table>
 
-
 ## 📌 주요 기능
 
-
-
 ### 모의 티켓팅 시뮬레이션
+
 - 실제 티켓팅 환경과 동일한 환경에서 단계별 티켓팅 프로세스 제공
-- 공연 정보에 따라 플랫폼 별 UI/UX 제공 ( 인터파크, Yes24, 티켓링크, 멜론티켓 ) 
+- 공연 정보에 따라 플랫폼 별 UI/UX 제공 ( 인터파크, Yes24, 티켓링크, 멜론티켓 )
 
 <div align="center">
 <b>날짜/회차 선택 → 대기열 진입 → 보안문자 입력 → 구역 및 좌석 선택 → 예매 완료 -> 피드백</b>
  <br/><br/>
  
 </div>
-
 
 <table>
     <tr>
@@ -103,22 +114,16 @@ https://github.com/user-attachments/assets/c9067dfb-ec05-43ac-81c4-6cd4ca82cf3f
     </tr>
  </table>
 
+### 봇 트래픽 발생
 
-### 봇 트래픽 발생 
-
- - 봇을 활용해 실제 상황과 유사한 수준의 가상 트래픽을 생성
- - 실존 트래픽 경쟁에 가까운 환경을 제공
-
-
-
+- 봇을 활용해 실제 상황과 유사한 수준의 가상 트래픽을 생성
+- 실존 트래픽 경쟁에 가까운 환경을 제공
 
 ### 티켓팅 결과 피드백 & 랭킹 제공
 
 - 각 단계별 소요 시간 측정(접속, 대기열, 보안문자, 좌석선택)
-- 전체 소요 시간, 전체 사용자 대비 순위를 제공하여 피드백 
+- 전체 소요 시간, 전체 사용자 대비 순위를 제공하여 피드백
 - 각 티켓팅(예매) 진행 이후 랭킹(순위) 제공
-
-
 
  <table>
     <tr>
@@ -131,11 +136,9 @@ https://github.com/user-attachments/assets/c9067dfb-ec05-43ac-81c4-6cd4ca82cf3f
     </tr>
  </table>
 
-
 ### 실제 티켓팅 정보 연동
 
 - 실제 티켓팅 정보를 받아와 예정된 티켓팅 일정을 제공
-
 
  <table>
     <tr>
@@ -154,20 +157,18 @@ https://github.com/user-attachments/assets/c9067dfb-ec05-43ac-81c4-6cd4ca82cf3f
 - 현재 환경의 네트워크 속도·ping 값을 확인
 - 성공률에 중요한 네트워크 상태 정보를 표시
 
-### 플랫폼 별 티켓팅 개인 연습 
+### 플랫폼 별 티켓팅 개인 연습
 
 - 각 플랫폼 (인터파크·YES24·멜론티켓) 별로 실제 예매 사이트 UI/UX 를 기준으로 최적화된 연습을 진행
 
-
-
 ## 시스템 아키텍처
+
 > 수십만명 트래픽을 감당할 수 있는 대규모 시스템 설계를 목적으로 안정성, 가용성을 중시한 아키텍처를 설계했습니다.
-더 자세한 기술적 설계 여정은 Wiki ADR 문서를 참고해주세요.
+> 더 자세한 기술적 설계 여정은 Wiki ADR 문서를 참고해주세요.
 
 <img width="814" height="682" alt="image" src="https://github.com/user-attachments/assets/d307d74f-38c3-45a2-b2a0-f94bb660cabd" />
 
 <img width="869" height="512" alt="Screenshot 2026-01-30 at 2 12 26 AM" src="https://github.com/user-attachments/assets/3778af0f-333d-465d-886e-e440ed3f159d" />
-
 
 - [기술 스택 선정 이유]()
 - [모노레포 pnpm을 도입한 이유]()
@@ -177,7 +178,6 @@ https://github.com/user-attachments/assets/c9067dfb-ec05-43ac-81c4-6cd4ca82cf3f
 - [티켓팅 대기열 시스템 동작 알고리즘]()
 - [티켓팅 스케쥴링 방식]()
 - [대규모 트래픽을 감당하는 예매 시스템 아키텍처 확장](https://github.com/boostcampwm2025/web10-beastcamp/wiki/%EB%8C%80%EA%B7%9C%EB%AA%A8-%EC%8B%9C%EC%8A%A4%ED%85%9C-%EC%95%84%ED%82%A4%ED%85%8D%EC%B2%98-%EC%84%A4%EA%B3%84-%EB%B0%8F-%ED%99%95%EC%9E%A5-%EB%B0%A9%EC%95%88)
-
 
 ---
 
@@ -217,11 +217,9 @@ ticketing-system/
         └── package.json
 ```
 
-
-
 ---
 
-## 시작하기 ( How to Start ) 
+## 시작하기 ( How to Start )
 
 ### 1. 패키지 설치
 
@@ -251,12 +249,12 @@ pnpm dev:queue
 pnpm dev:frontend
 ```
 
-
 ## 🛠️기술 스택
 
 <div>
 
 ### Frontend
+
 <div>
   <img src="https://img.shields.io/badge/next.js-16.1.1-000000?style=for-the-badge&logo=nextdotjs&logoColor=white" alt="Next.js"/>
   <img src="https://img.shields.io/badge/react-19.2.0-61DAFB?style=for-the-badge&logo=react&logoColor=white" alt="React"/>
@@ -268,6 +266,7 @@ pnpm dev:frontend
 </div>
 
 ### Backend
+
 <div>
   <img src="https://img.shields.io/badge/nestjs-11.0.1-E0234E?style=for-the-badge&logo=nestjs&logoColor=white" alt="NestJS"/>
   <img src="https://img.shields.io/badge/typescript-5.7.3-3178C6?style=for-the-badge&logo=typescript&logoColor=white" alt="TypeScript"/>
@@ -275,12 +274,14 @@ pnpm dev:frontend
 </div>
 
 ### Database
+
 <div>
   <img src="https://img.shields.io/badge/mysql-8.0-4479A1?style=for-the-badge&logo=mysql&logoColor=white" alt="MySQL"/>
   <img src="https://img.shields.io/badge/redis-7.2-DC382D?style=for-the-badge&logo=redis&logoColor=white" alt="Redis"/>
 </div>
 
 ### DevOps
+
 <div>
   <img src="https://img.shields.io/badge/docker-2496ED?style=for-the-badge&logo=docker&logoColor=white" alt="Docker"/>
   <img src="https://img.shields.io/badge/naver%20cloud%20platform-03C75A?style=for-the-badge&logo=naver&logoColor=white" alt="NCP"/>
@@ -288,5 +289,4 @@ pnpm dev:frontend
 
 </div>
 
-
-## 
+##
