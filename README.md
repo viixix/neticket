@@ -1,9 +1,9 @@
 <details>
 <summary><h2>포크 후 변경 사항</h2></summary>
 
-- **서비스명 변경**: beastcamp → neticket, api-server → show, ticket-server → booking, queue-backend → queue
+- **서비스명 변경**: `api-server` → `show`, `ticket-server` → `booking`, `queue-backend` → `queue`
 - **인프라 전환**: NCP(Naver Cloud Platform) → GCP(Google Cloud Platform)
-- **대기열 개선**: ZADD+ZRANK Lua 원자화로 race condition 제거, nginx 글로벌 rate limit + thundering herd 완충, docker compose scale 지원
+- **대기열 개선**: `ZADD`+`ZRANK` Lua 원자화로 race condition 제거, nginx 글로벌 rate limit + thundering herd 완충, docker compose scale 지원
 - **부하 테스트 도구**: [neticket-agent](https://github.com/viixix/neticket-agent) — 가상 유저 대량 투입 CLI (3종 페르소나 모델링)
 
 </details>
