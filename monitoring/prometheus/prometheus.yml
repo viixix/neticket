@@ -2,10 +2,15 @@ global:
   scrape_interval: 15s
 
 scrape_configs:
-  - job_name: 'core-metrics'
+  - job_name: 'core-cadvisor'
     static_configs:
-      - targets: ['192.168.0.7:8080'] # show, booking instance
+      - targets: ['192.168.0.7:8080']
 
   - job_name: 'queue-metrics'
+    metrics_path: '/api/metrics'
     static_configs:
-      - targets: ['192.168.0.8:8080'] # queue-server instance
+      - targets: ['192.168.0.8:3003']
+
+  - job_name: 'queue-cadvisor'
+    static_configs:
+      - targets: ['192.168.0.8:8080']
