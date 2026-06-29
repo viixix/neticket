@@ -1,7 +1,5 @@
 <details>
-<summary>포크 후 변경 사항</summary>
-
-## 포크 후 변경 사항
+<summary><h2>포크 후 변경 사항</h2></summary>
 
 - **서비스명 변경**: beastcamp → neticket, api-server → show, ticket-server → booking, queue-backend → queue
 - **인프라 전환**: NCP(Naver Cloud Platform) → GCP(Google Cloud Platform)
