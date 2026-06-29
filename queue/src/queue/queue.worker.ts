@@ -4,6 +4,7 @@ import { REDIS_KEYS, PROVIDERS, REDIS_KEY_PREFIXES } from '@neticket/contracts';
 import { QueueConfigService } from './queue-config.service';
 import { QUEUE_ERROR_CODES } from '@neticket/common';
 import { createQueueErrorHandler } from './utils/queue-error.util';
+import { MetricsService } from '../metrics/metrics.service';
 
 interface RedisWithCommands extends Redis {
   syncAndPromoteWaiters(
@@ -29,6 +30,7 @@ export class QueueWorker {
   constructor(
     @Inject(PROVIDERS.REDIS_QUEUE) private readonly redis: RedisWithCommands,
     private readonly configService: QueueConfigService,
+    private readonly metricsService: MetricsService,
   ) {}
 
   async processQueueTransfer() {
@@ -42,6 +44,9 @@ export class QueueWorker {
     try {
       const { worker, heartbeat } = this.configService;
 
+      const end = this.metricsService.redisCommandDuration.startTimer({
+        command: 'lua_promote',
+      });
       const movedUsers = await this.redis.syncAndPromoteWaiters(
         REDIS_KEYS.WAITING_QUEUE,
         REDIS_KEYS.ACTIVE_QUEUE,
@@ -54,6 +59,14 @@ export class QueueWorker {
         REDIS_KEY_PREFIXES.ACTIVE_USER,
         heartbeat.enabled,
       );
+      end();
+
+      const [waitingLen, activeLen] = await Promise.all([
+        this.redis.zcard(REDIS_KEYS.WAITING_QUEUE),
+        this.redis.zcard(REDIS_KEYS.ACTIVE_QUEUE),
+      ]);
+      this.metricsService.waitingQueueLength.set(waitingLen);
+      this.metricsService.activeCount.set(activeLen);
 
       if (movedUsers.length > 0) {
         this.logger.debug('🚀 유저 활성 큐 이동 완료', {
