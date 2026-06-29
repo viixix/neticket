@@ -26,11 +26,7 @@
  <br />
   </p>
     <p>
-<<<<<<< HEAD
-        <a href="https://www.neticket.site/" target="_blank">지금 바로 접속하기</a>
-=======
         <a href="https://web10.site" target="_blank"><s>지금 바로 접속하기</s></a>
->>>>>>> e45fbc2 (docs(readme): 포크 후 변경 사항 토글 추가)
     </p>
     <a href="https://chaegang.notion.site/WEB_10-TEAM_PROJECT-2c4748edda9b801ba43cc3708bf1fd54?source=copy_link" target="_blank">개발팀노션</a> &nbsp; &nbsp; |&nbsp; &nbsp; 
     <a href="https://github.com/boostcampwm2025/web10-beastcamp/wiki" target="_blank">Wiki</a> &nbsp; &nbsp; |&nbsp; &nbsp;
